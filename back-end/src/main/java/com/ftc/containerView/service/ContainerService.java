@@ -25,6 +25,10 @@ public class ContainerService {
     }
 
     public List<Container> getContainersByUser(User user) {
+        return containerRepository.findById(Id);
+    }
+
+    public List<Container> getContainersByUser(User user) {
         return containerRepository.findByUser(user);
     }
 }
