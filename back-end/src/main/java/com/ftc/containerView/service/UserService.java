@@ -1,18 +1,18 @@
 package com.ftc.containerView.service;
 
-import com.ftc.containerView.model.Container;
 import com.ftc.containerView.model.User;
-import com.ftc.containerView.repository.ContainerRepository;
-import com.ftc.containerView.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
 
+    @Autowired
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -25,11 +25,11 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<User> getUsersById() {
+    public Optional<User> getUsersById(Long id) {
         return userRepository.findById(id);
     }
 
-    public List<User> getUsersByUsername() {
+    public Optional<User> getUsersByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 

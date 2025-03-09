@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="Initial Spring project" />
+    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="Corrections in User and Container services">
+      <change beforePath="$PROJECT_DIR$/.idea/ContainerView.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ContainerView.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repository/ContainerRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/UserService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,7 +40,7 @@
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/edu-hc/ContainerView.git&quot;,
-    &quot;accountId&quot;: &quot;91194f15-ddd8-4d61-97c7-15e7430f2f70&quot;
+    &quot;accountId&quot;: &quot;09429577-eb2f-45a7-bc64-afeecd8bb53f&quot;
   }
 }</component>
   <component name="MavenImportPreferences">
@@ -47,21 +58,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/educa/DEV/ContainerView",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/educa/DEV/ContainerView&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\DEV\Projeto Arimava\containerView\back-end" />
@@ -95,7 +106,11 @@
       <updated>1740772911650</updated>
       <workItem from="1740772912687" duration="136000" />
       <workItem from="1741193623459" duration="2608000" />
-      <workItem from="1741211458270" duration="345000" />
+      <workItem from="1741211458270" duration="590000" />
+      <workItem from="1741289260264" duration="538000" />
+      <workItem from="1741371375621" duration="3000" />
+      <workItem from="1741555827408" duration="1255000" />
+      <workItem from="1741557217383" duration="4322000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Spring project">
       <option name="closed" value="true" />
@@ -105,7 +120,15 @@
       <option name="project" value="LOCAL" />
       <updated>1740773020931</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Corrections in User and Container services">
+      <option name="closed" value="true" />
+      <created>1741211998771</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1741211998771</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -113,6 +136,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial Spring project" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial Spring project" />
+    <MESSAGE value="Corrections in User and Container services" />
+    <option name="LAST_COMMIT_MESSAGE" value="Corrections in User and Container services" />
   </component>
 </project>
