@@ -35,6 +35,25 @@ public class ContainerService {
         return containerRepository.findByUser(user);
     }
 
+    public Container updateContainer(Long containerId, Container updatedContainer) {
+
+        Container existingContainer = containerRepository.findById(containerId)
+                .orElseThrow(() -> new RuntimeException("Container não encontrado"));
+
+        // Atualiza os campos se forem diferentes
+        if (!existingContainer.getImageUrl().equals(updatedContainer.getImageUrl())) {
+            existingContainer.setImageUrl(updatedContainer.getImageUrl());
+        }
+
+        if (!existingContainer.getDescription().equals(updatedContainer.getDescription())) {
+            existingContainer.setDescription(updatedContainer.getDescription());
+        }
+
+        // Salva o usuário atualizado
+        return containerRepository.save(existingContainer);
+
+    }
+
     public void deleteContainer(Long id) {
         containerRepository.deleteById(id);
     }

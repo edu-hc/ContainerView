@@ -14,7 +14,6 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
 
     @Autowired
@@ -23,7 +22,6 @@ public class UserService {
     }
 
     public User saveUser(User user) {
-        log.info("Criando usuário: {}", user.getUsername());
         return userRepository.save(user);
     }
 
@@ -43,34 +41,20 @@ public class UserService {
     public User updateUser(Long userId, User updatedUser) {
         // Busca o usuário existente
         User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("Usuário ID: {} não encontrado.", userId);
-                    return new RuntimeException("Usuário não encontrado");
-                });
-
-        // Log dos dados antigos
-        log.info("Atualizando usuário ID: {}", userId);
-        log.debug("Dados antigos - Username: {}, Password: {}", existingUser.getUsername(), existingUser.getPassword());
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         // Atualiza os campos se forem diferentes
         if (!existingUser.getUsername().equals(updatedUser.getUsername())) {
-            log.debug("Username alterado: {} -> {}", existingUser.getUsername(), updatedUser.getUsername());
             existingUser.setUsername(updatedUser.getUsername());
         }
 
         if (!existingUser.getPassword().equals(updatedUser.getPassword())) {
-            log.debug("Password alterado: {} -> {}", existingUser.getPassword(), updatedUser.getPassword());
             existingUser.setPassword(updatedUser.getPassword());
         }
 
         // Salva o usuário atualizado
-        User savedUser = userRepository.save(existingUser);
+        return userRepository.save(existingUser);
 
-        // Log dos novos dados
-        log.debug("Dados atualizados - Username: {}, Password: {}", savedUser.getUsername(), savedUser.getPassword());
-        log.info("Usuário ID: {} atualizado com sucesso.", userId);
-
-        return savedUser;
     }
 
     public void deleteUser(Long id) {
