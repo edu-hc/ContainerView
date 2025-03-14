@@ -4,17 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="Corrections in User and Container services">
-      <change beforePath="$PROJECT_DIR$/.idea/ContainerView.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ContainerView.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repository/ContainerRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repository/UserRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/UserService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,6 +16,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="spring-beans.schema" />
       </list>
     </option>
   </component>
@@ -60,8 +52,13 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.ContainerViewApplication.executor&quot;: &quot;Run&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/educa/DEV/ContainerView&quot;,
@@ -110,7 +107,12 @@
       <workItem from="1741289260264" duration="538000" />
       <workItem from="1741371375621" duration="3000" />
       <workItem from="1741555827408" duration="1255000" />
-      <workItem from="1741557217383" duration="4322000" />
+      <workItem from="1741557217383" duration="4504000" />
+      <workItem from="1741571104508" duration="5355000" />
+      <workItem from="1741576538859" duration="752000" />
+      <workItem from="1741630008959" duration="8545000" />
+      <workItem from="1741648470415" duration="535000" />
+      <workItem from="1741649022114" duration="1130000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Spring project">
       <option name="closed" value="true" />
@@ -128,15 +130,53 @@
       <option name="project" value="LOCAL" />
       <updated>1741211998771</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Logs and report generation">
+      <option name="closed" value="true" />
+      <created>1741561783629</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1741561783629</updated>
+    </task>
+    <task id="LOCAL-00004" summary="basic structure completed">
+      <option name="closed" value="true" />
+      <created>1741648568848</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1741648568848</updated>
+    </task>
+    <task id="LOCAL-00005" summary="fixes">
+      <option name="closed" value="true" />
+      <created>1741649045410</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1741649045410</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial Spring project" />
     <MESSAGE value="Corrections in User and Container services" />
-    <option name="LAST_COMMIT_MESSAGE" value="Corrections in User and Container services" />
+    <MESSAGE value="Logs and report generation" />
+    <MESSAGE value="basic structure completed" />
+    <MESSAGE value="fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixes" />
   </component>
 </project>

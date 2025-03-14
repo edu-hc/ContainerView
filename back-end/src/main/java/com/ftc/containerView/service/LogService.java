@@ -1,29 +1,39 @@
 package com.ftc.containerView.service;
 
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.ftc.containerView.model.LogEntry;
+import com.ftc.containerView.repositories.LogRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class LogService {
 
-    private final FirebaseFirestore firestore;
+    private final LogRepository logRepository;
 
-    public LogService() {
-        firestore = FirebaseFirestore.getInstance();
+    @Autowired
+    public LogService(LogRepository logRepository) {
+        this.logRepository = logRepository;
     }
 
-    public void registrarLog(String tipo, String mensagem) {
-        Map<String, Object> log = new HashMap<>();
-        log.put("tipo", tipo);
-        log.put("mensagem", mensagem);
-        log.put("timestamp", System.currentTimeMillis());
+    public LogEntry saveLog(String level, String message) {
+        LogEntry logEntry = new LogEntry(level, message);
+        return logRepository.save(logEntry);
+    }
 
-        CollectionReference logsRef = firestore.collection("logs");
-        logsRef.add(log);
+    // Buscar logs entre duas datas
+    public List<LogEntry> getLogsBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
+        return logRepository.findByCreatedAtBetween(startDate, endDate);
+    }
+
+    // Buscar logs por nível
+    public List<LogEntry> getLogsByLevel(String level) {
+        return logRepository.findByLevel(level);
+    }
+
+    // Buscar logs por nível e entre duas datas
+    public List<LogEntry> getLogsByLevelAndDateRange(String level, LocalDateTime startDate, LocalDateTime endDate) {
+        return logRepository.findByLevelAndCreatedAtBetween(level, startDate, endDate);
     }
 }

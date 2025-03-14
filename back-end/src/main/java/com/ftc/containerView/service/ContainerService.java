@@ -2,6 +2,7 @@ package com.ftc.containerView.service;
 
 import com.ftc.containerView.model.Container;
 import com.ftc.containerView.model.User;
+import com.ftc.containerView.repositories.ContainerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,10 @@ public class ContainerService {
 
     public List<Container> getContainersByUser(User user) {
         return containerRepository.findByUser(user);
+    }
+
+    public void deleteContainer(Long id) {
+        containerRepository.deleteById(id);
     }
 }
 
