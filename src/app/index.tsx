@@ -1,72 +1,182 @@
-import { Text, View } from "react-native";
-import { Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { router } from 'expo-router';
+import {
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Switch,
+  StatusBar,
+} from 'react-native';
+import { cssInterop } from "nativewind";
+import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Index() {
+// Aplicando cssInterop para todos os componentes que vamos estilizar
+cssInterop(Text, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(View, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(TextInput, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(TouchableOpacity, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(Image, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(SafeAreaView, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(ScrollView, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(KeyboardAvoidingView, {
+  className: {
+    target: "style",
+  },
+});
+cssInterop(LinearGradient, {
+  className: {
+    target: "style",
+  },
+});
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberLogin, setRememberLogin] = useState(false);
+
+  // Configure status bar to match gradient background
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#5583D9');
+      StatusBar.setTranslucent(true);
+    }
+  }, []);
+
+  // Handle login navigation
+  const handlelogs = () => {
+    // You could add validation logic here
+    router.push('/logs');
+  };
+
   return (
-    <section
-    className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0" 
-    style={{background: 'linear-gradient(135deg, #2C3E50 0%, #4A69BD 100%)'}}
->
-  <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0">
-  <Image
-        source={require('./images/coruja.png')}
-        style={{
-          width: 100,
-          height: 100,
-          position: 'absolute',
-          top: 100,  // Distância do topo
-          left: '50%', // Centraliza horizontalmente
-          marginLeft: -50, // Ajusta a imagem para ficar centralizada corretamente (metade da largura da imagem)
-        }}
-      />
-      <h1 className="flex items-center mb-4 text-2xl font-semibold text-black dark:text-black">
-          NOCT    
-      </h1>
-      <div className="w-full bg-white border-2 border-gray-200 rounded-lg shadow-lg md:mt-0 sm:max-w-md xl:p-0">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-800 md:text-2xl dark:text-gray-800">
+    <View className="flex-1">
+      <StatusBar />
+      <LinearGradient
+        colors={['#5583D9', '#5578D9']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="flex-1"
+      >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView className="flex-1">
+            <SafeAreaView className="flex-1 items-center justify-center px-5 py-10">
+              <Image
+                source={require('./images/coruja.png')}
+                className="w-24 h-24 mb-1 mt-20"
+                resizeMode="contain"
+              />
+              <Text className="text-2xl font-bold text-black mb-8">NOCT</Text>
+              
+              <View className="w-full max-w-md bg-white rounded-lg shadow-lg px-6 py-6 mt-6">
+                <Text className="text-xl font-bold text-gray-800 mb-5">
                   Entre na sua conta
-              </h1>
-              <form className="space-y-4 md:space-y-6" action="#">
-                  <div>
-                      <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-700">Email</label>
-                      <input type="email" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-50 dark:border-gray-300 dark:placeholder-gray-500 dark:text-gray-800 dark:focus:ring-indigo-500 dark:focus:border-indigo-500" 
-                        placeholder="nome@exemplo.com" 
-                        required 
+                </Text>
+                
+                <View className="space-y-4">
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+                    <TextInput
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2.5 w-full"
+                      placeholder="nome@exemplo.com"
+                      placeholderTextColor="#A0AEC0"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+                  
+                  <View>
+                    <Text className="text-sm font-medium text-gray-700 mb-2 mt-5">Senha</Text>
+                    <TextInput
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2.5 w-full"
+                      placeholder="••••••••"
+                      placeholderTextColor="#A0AEC0"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                    />
+                  </View>
+                  
+                  <View className="flex-row justify-between items-center mt-5">
+                    <View className="flex-row items-center">
+                      <Switch
+                        value={rememberLogin}
+                        onValueChange={setRememberLogin}
+                        trackColor={{ false: "#E2E8F0", true: "#7F9CF5" }}
+                        thumbColor={rememberLogin ? "#4C51BF" : "#f4f3f4"}
                       />
-                  </div>
-                  <div>
-                      <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-700">Senha</label>
-                      <input type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-50 dark:border-gray-300 dark:placeholder-gray-500 dark:text-gray-800 dark:focus:ring-indigo-500 dark:focus:border-indigo-500" 
-                        required 
-                      />
-                  </div>
-                  <div className="flex items-center justify-between">
-                      <div className="flex items-start">
-                          <div className="flex items-center h-5">
-                            <input id="remember" aria-describedby="remember" type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:bg-gray-100 dark:border-gray-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-100" 
-                              required
-                            />
-                          </div>
-                          <div className="ml-2 text-sm">
-                            <label htmlFor="remember" className="text-gray-600">Manter login</label>
-                          </div>
-                      </div>
-                      <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline">Esqueceu sua senha?</a>
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-semibold rounded-lg text-sm px-6 py-3 text-center transition-all duration-100 ease-in-out transform hover:scale-100 active:scale-95"
+                      <Text className="ml-2 text-sm text-gray-600">Manter login</Text>
+                    </View>
+                    <TouchableOpacity>
+                      <Text className="text-sm font-medium text-indigo-600">Esqueceu sua senha?</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <TouchableOpacity
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-lg px-4 py-3 mt-5"
+                    activeOpacity={0.8}
+                    onPress={handlelogs}
                   >
-                    Entrar
-                  </button>
-                  <p className="text-sm font-light text-gray-600">
-                      Não possui uma conta ainda? <a href="#" className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline">Cadastre-se</a>
-                  </p>
-              </form>
-          </div>
-      </div>
-  </div>
-</section>
+                    <Text className="text-white text-center font-semibold">Entrar</Text>
+                  </TouchableOpacity>
+                  
+                  <View className="flex-row justify-center flex-wrap mt-4">
+                    <Text className="text-sm text-gray-600">
+                      Não possui uma conta ainda?{' '}
+                    </Text>
+                    <TouchableOpacity >
+                      <Text className="text-sm font-medium text-indigo-600">Cadastre-se</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </SafeAreaView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </LinearGradient>
+  </View>
   );
 }

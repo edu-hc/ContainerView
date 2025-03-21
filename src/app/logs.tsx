@@ -1,18 +1,46 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, StyleSheet, Animated, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Animated, TouchableWithoutFeedback, TextInput, FlatList} from 'react-native';
 import { Svg, Path } from 'react-native-svg';
+import { cssInterop } from 'nativewind';
+import { StyleSheet } from "react-native"
+import sombra from "./images/style"
+import users from "./results";
+import ListItem from "./components/operations"
+import FilterButton from './components/filter';
 
-// Since we're not using an actual tailwind library in this example,
-// we'll use regular React Native styles to mimic the Tailwind classes
+// Interop para permitir o uso de classes Tailwind em componentes React Native
+cssInterop(View, { className: 'style' });
+cssInterop(Text, { className: 'style' });
+cssInterop(TouchableOpacity, { className: 'style' });
+cssInterop(ScrollView, { className: 'style' });
+cssInterop(SafeAreaView, { className: 'style' });
+cssInterop(Animated.View, { className: 'style' });
+cssInterop(TouchableWithoutFeedback, { className: 'style' });
 
-const Logs = () => {
+export default function Logs() {
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const translateX = useRef(new Animated.Value(-256)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const sidebarWidth = 256;
+  const [searchText, setSearchText] = useState('');
+  const [list, setList] = useState(users);
+
+  useEffect(() => {
+    if (searchText === '') {
+      setList(users);
+    } else {
+      setList(
+        users.filter(
+          (item) =>
+            item.operacao.toLowerCase().indexOf(searchText.toLowerCase()) > -1
+        )
+      );
+    }
+    console.log(list); // Verifique os dados do FlatList
+  }, [searchText]);
 
   const toggleSidebar = () => {
-    // Start both animations together
     Animated.parallel([
       Animated.timing(translateX, {
         toValue: sidebarOpen ? -sidebarWidth : 0,
@@ -23,12 +51,11 @@ const Logs = () => {
         toValue: sidebarOpen ? 0 : 1,
         duration: 300,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
-    
+
     setSidebarOpen(!sidebarOpen);
   };
-
   const closeSidebar = () => {
     if (sidebarOpen) {
       Animated.parallel([
@@ -41,118 +68,138 @@ const Logs = () => {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
-        })
+        }),
       ]).start();
-      
+
       setSidebarOpen(false);
     }
   };
 
-  // Reset animation values when component mounts
   useEffect(() => {
     translateX.setValue(sidebarOpen ? 0 : -sidebarWidth);
     overlayOpacity.setValue(sidebarOpen ? 1 : 0);
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.wrapper}>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 flex-col">
         {/* Mobile Toggle Button */}
-        <TouchableOpacity
-          style={styles.toggleButton}
-          onPress={toggleSidebar}
-        >
-          <Svg width={24} height={24} viewBox="0 0 20 20" fill="#6B7280">
-            <Path
-              d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"
-            />
-          </Svg>
-        </TouchableOpacity>
-
+        <View className='w-full h-28 bg-indigo-300 shadow-lg' style={sombra.shadow}>
+          <TouchableOpacity
+            className="absolute p-2 mt-12 ml-3 z-10"
+            onPress={toggleSidebar}
+          >
+            <Svg width={30} height={30} viewBox="0 0 20 20" fill="#6B7280">
+              <Path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z" />
+            </Svg>
+          </TouchableOpacity>
+        </View>
         {/* Animated Overlay */}
-        <Animated.View 
-          style={[
-            styles.overlay,
-            { opacity: overlayOpacity },
-            // Hide the overlay completely when fully transparent
-            { pointerEvents: sidebarOpen ? 'auto' : 'none' }
-          ]}
+        <Animated.View
+          className="absolute w-full h-full bg-black/30 z-30"
+          style={{ opacity: overlayOpacity, pointerEvents: sidebarOpen ? 'auto' : 'none' }}
         >
           <TouchableWithoutFeedback onPress={closeSidebar}>
-            <View style={styles.overlayTouchable} />
+            <View className="w-full h-full" />
           </TouchableWithoutFeedback>
         </Animated.View>
 
         {/* Sidebar */}
         <Animated.View
-          style={[
-            styles.sidebar,
-            { transform: [{ translateX: translateX }] }
-          ]}
+          className="absolute left-0 w-64 h-full bg-gray-50 z-40 shadow-lg mt-7"
+          style={{ transform: [{ translateX: translateX }] }}
         >
-          <ScrollView style={styles.sidebarScroll}>
-            <View style={styles.menuList}>
+          <ScrollView className="h-full px-3 py-4">
+            <View className="my-2">
               {/* Dashboard */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <DashboardIcon />
-                <Text style={styles.menuText}>Dashboard</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Dashboard</Text>
               </TouchableOpacity>
 
               {/* Kanban */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2 bg-white hover:bg-slate-400">
                 <KanbanIcon />
-                <Text style={styles.menuText}>Kanban</Text>
-                <View style={styles.proBadge}>
-                  <Text style={styles.badgeText}>Pro</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Kanban</Text>
+                <View className="px-2 py-1 ml-3 bg-gray-100 rounded-full">
+                  <Text className="text-sm font-medium text-gray-700">Pro</Text>
                 </View>
               </TouchableOpacity>
 
               {/* Inbox */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <InboxIcon />
-                <Text style={styles.menuText}>Inbox</Text>
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationText}>3</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Inbox</Text>
+                <View className="w-6 h-6 rounded-full bg-blue-100 items-center justify-center ml-3">
+                  <Text className="text-sm font-medium text-blue-800">3</Text>
                 </View>
               </TouchableOpacity>
 
               {/* Users */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <UsersIcon />
-                <Text style={styles.menuText}>Users</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Users</Text>
               </TouchableOpacity>
 
               {/* Products */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <ProductsIcon />
-                <Text style={styles.menuText}>Products</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Products</Text>
               </TouchableOpacity>
 
               {/* Sign In */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <SignInIcon />
-                <Text style={styles.menuText}>Sign In</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Sign In</Text>
               </TouchableOpacity>
 
               {/* Sign Up */}
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity className="flex-row items-center p-2 rounded-lg mb-2">
                 <SignUpIcon />
-                <Text style={styles.menuText}>Sign Up</Text>
+                <Text className="ml-3 text-base font-medium text-gray-900 flex-1">Sign Up</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
         </Animated.View>
-
-        {/* Main Content */}
-        <View style={styles.content}>
-          
+        <View className='mt-6 bg-white w-full flex-row'>
+        <TextInput
+            placeholder="Pesquise uma operação"
+            placeholderTextColor="#888"
+            value={searchText}
+            onChangeText={(t) => setSearchText(t)}
+            className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg px-3 py-2.5 w-80 mb-6 mt-3 ml-7"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2,
+            }}
+          />
+          <FilterButton />
+        </View>
+        <View className=' bg-white w-full flex-1 items-center'>
+          <FlatList
+            data={list}
+            renderItem={({ item }) => <ListItem data={item} />}
+            keyExtractor={(item) => item.operacao.toString()}
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 20 }}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+            ListEmptyComponent={() => (
+              <View className="items-center justify-center p-8">
+                <Text className="text-gray-500 text-base">Nenhum resultado encontrado</Text>
+              </View>
+            )}
+          />
         </View>
       </View>
     </SafeAreaView>
   );
-};
+}
 
-// Icons Components
+// Icons Components (mesmo do exemplo anterior)
 const DashboardIcon = () => (
   <Svg width={20} height={20} viewBox="0 0 22 21" fill="#6B7280">
     <Path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
@@ -203,101 +250,3 @@ const SignUpIcon = () => (
     <Path d="M8.961 16a.93.93 0 0 0 .189-.019l3.4-.679a.961.961 0 0 0 .49-.263l6.118-6.117a2.884 2.884 0 0 0-4.079-4.078l-6.117 6.117a.96.96 0 0 0-.263.491l-.679 3.4A.961.961 0 0 0 8.961 16Zm7.477-9.8a.958.958 0 0 1 .68-.281.961.961 0 0 1 .682 1.644l-.315.315-1.36-1.36.313-.318Zm-5.911 5.911 4.236-4.236 1.359 1.359-4.236 4.237-1.7.339.341-1.699Z" />
   </Svg>
 );
-
-// Styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#ffffff'
-  },
-  wrapper: {
-    flex: 1,
-    flexDirection: 'row'
-  },
-  toggleButton: {
-    position: 'absolute',
-    padding: 8,
-    marginTop: 8,
-    marginLeft: 12,
-    zIndex: 10
-  },
-  overlay: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    zIndex: 30,
-  },
-  overlayTouchable: {
-    width: '100%',
-    height: '100%',
-  },
-  sidebar: {
-    position: 'absolute',
-    left: 0,
-    width: 256,
-    height: '100%',
-    backgroundColor: '#f9fafb',
-    zIndex: 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  sidebarScroll: {
-    height: '100%',
-    paddingHorizontal: 12,
-    paddingVertical: 16
-  },
-  menuList: {
-    marginVertical: 8
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8
-  },
-  menuText: {
-    marginLeft: 12,
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-    flex: 1
-  },
-  proBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 12,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 9999,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#1f2937'
-  },
-  notificationBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 9999,
-    backgroundColor: '#dbeafe',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 12
-  },
-  notificationText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#1e40af'
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-    marginLeft: 0
-  }
-});
-
-export default Logs;
