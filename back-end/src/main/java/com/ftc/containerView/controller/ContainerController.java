@@ -26,12 +26,14 @@ public class ContainerController {
 
     private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
     private final ContainerService containerService;
+    private final LogService logService;
     private final UserService userService;
     //private final FirebaseStorageService firebaseStorageService;
 
     @Autowired
-    public ContainerController(ContainerService containerService, UserService userService/*, FirebaseStorageService firebaseStorageService*/) {
+    public ContainerController(ContainerService containerService, LogService logService, UserService userService/*, FirebaseStorageService firebaseStorageService*/) {
         this.containerService = containerService;
+        this.logService = logService;
         //this.firebaseStorageService = firebaseStorageService;
         this.userService = userService;
     }
@@ -75,6 +77,7 @@ public class ContainerController {
         // Gera a URL do arquivo
         container.setImageUrl("http://localhost:8080/uploads/" + fileName);
 
+        logService.saveLog("Container created", LocalDateTime.now().toString());
         return ResponseEntity.ok(containerService.saveContainer(container));
     }
 

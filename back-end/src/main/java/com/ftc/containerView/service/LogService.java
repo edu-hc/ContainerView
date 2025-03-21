@@ -17,8 +17,8 @@ public class LogService {
         this.logRepository = logRepository;
     }
 
-    public LogEntry saveLog(String level, String message) {
-        LogEntry logEntry = new LogEntry(level, message);
+    public LogEntry saveLog(String level, User user, String message) {
+        LogEntry logEntry = new LogEntry(level, user, message);
         return logRepository.save(logEntry);
     }
 
