@@ -4,18 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="updateContainer method">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/.gitignore" afterDir="false" />
+    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="Repo organization">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/babel.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/babel.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/LogService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/LogService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metro.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/metro.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/nativewind-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/nativewind-env.d.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tailwind.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/tailwind.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/tsconfig.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +120,9 @@
       <workItem from="1741985576218" duration="3522000" />
       <workItem from="1742183258666" duration="104000" />
       <workItem from="1742645497863" duration="2390000" />
-      <workItem from="1742843955425" duration="480000" />
+      <workItem from="1742843955425" duration="560000" />
+      <workItem from="1742844565945" duration="13000" />
+      <workItem from="1742844584615" duration="96000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Spring project">
       <option name="closed" value="true" />
@@ -196,7 +188,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741989773326</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Repo organization">
+      <option name="closed" value="true" />
+      <created>1742844481370</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1742844481370</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -220,6 +220,7 @@
     <MESSAGE value="basic structure completed" />
     <MESSAGE value="fixes" />
     <MESSAGE value="updateContainer method" />
-    <option name="LAST_COMMIT_MESSAGE" value="updateContainer method" />
+    <MESSAGE value="Repo organization" />
+    <option name="LAST_COMMIT_MESSAGE" value="Repo organization" />
   </component>
 </project>
