@@ -4,9 +4,82 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="feat: operation entity, repository, and service">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/front-end/src/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/index.tsx" afterDir="false" />
+    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="front-end organization">
+      <change afterPath="$PROJECT_DIR$/front-end/android/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/build.gradle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/debug.keystore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/proguard-rules.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/debug/AndroidManifest.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/java/com/anonymous/containerview/MainActivity.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/java/com/anonymous/containerview/MainApplication.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/drawable/rn_edit_text_material.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/values-night/colors.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/values/colors.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/app/src/main/res/values/styles.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/build.gradle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/gradle.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/gradlew" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/gradlew.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/android/settings.gradle" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/app.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/fonts/SpaceMono-Regular.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/adaptive-icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/favicon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/partial-react-logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/react-logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/react-logo@2x.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/react-logo@3x.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/assets/images/splash-icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/babel.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/metro.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/nativewind-env.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/_layout.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/components/filter.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/components/icons/filtro.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/components/operations.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/images/coruja.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/images/style.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/index.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/logs.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/app/results.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/main/resources/static/uploads/72848264-d266-467d-80dc-f333179f8d65_container-maritimo.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/main/resources/static/uploads/9c967e8e-88d2-430f-92aa-5bfa95cf44da_container-maritimo.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/main/resources/static/uploads/af9f705e-081c-4d73-8349-d9c9fe69a58e_container-maritimo.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/main/resources/static/uploads/f75cc104-9709-490c-9d0d-de51e9c902fb_container-maritimo.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/src/styles/global.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/tailwind.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/front-end/types/nativewind-env.d.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,6 +210,7 @@
       <workItem from="1744151771172" duration="1722000" />
       <workItem from="1744165131693" duration="3759000" />
       <workItem from="1744168963367" duration="9000" />
+      <workItem from="1744168988283" duration="1439000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Spring project">
       <option name="closed" value="true" />
@@ -226,7 +300,23 @@
       <option name="project" value="LOCAL" />
       <updated>1744168846125</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="feat: operation entity, repository, and service">
+      <option name="closed" value="true" />
+      <created>1744169056554</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1744169056554</updated>
+    </task>
+    <task id="LOCAL-00013" summary="feat: operation entity, repository, and service">
+      <option name="closed" value="true" />
+      <created>1744169436281</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1744169436281</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -252,6 +342,7 @@
     <MESSAGE value="updateContainer method" />
     <MESSAGE value="Repo organization" />
     <MESSAGE value="feat: operation entity, repository, and service" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: operation entity, repository, and service" />
+    <MESSAGE value="front-end organization" />
+    <option name="LAST_COMMIT_MESSAGE" value="front-end organization" />
   </component>
 </project>
