@@ -4,21 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="Repo organization">
+    <list default="true" id="b2579a10-98aa-47e2-9ad1-a456271d197f" name="Changes" comment="feat: operation entity, repository, and service">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/controller/ContainerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/controller/ContainerController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Container.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/LogEntry.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Operation.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/Operation.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/model/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repositories/ContainerRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repositories/ContainerRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repositories/LogRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repositories/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/repositories/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/ContainerService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/java/com/ftc/containerView/service/LogService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/back-end/src/main/resources/log4j2-spring.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/front-end/src/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/app/index.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -148,7 +135,8 @@
       <workItem from="1743256056671" duration="718000" />
       <workItem from="1744148911175" duration="2528000" />
       <workItem from="1744151771172" duration="1722000" />
-      <workItem from="1744165131693" duration="3505000" />
+      <workItem from="1744165131693" duration="3759000" />
+      <workItem from="1744168963367" duration="9000" />
     </task>
     <task id="LOCAL-00001" summary="Initial Spring project">
       <option name="closed" value="true" />
@@ -230,7 +218,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742844804399</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="feat: operation entity, repository, and service">
+      <option name="closed" value="true" />
+      <created>1744168846125</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1744168846125</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -255,6 +251,7 @@
     <MESSAGE value="fixes" />
     <MESSAGE value="updateContainer method" />
     <MESSAGE value="Repo organization" />
-    <option name="LAST_COMMIT_MESSAGE" value="Repo organization" />
+    <MESSAGE value="feat: operation entity, repository, and service" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: operation entity, repository, and service" />
   </component>
 </project>

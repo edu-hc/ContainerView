@@ -89,7 +89,7 @@ export default function LoginScreen() {
     <View className="flex-1">
       <StatusBar />
       <LinearGradient
-        colors={['#5583D9', '#5578D9']}
+        colors={['#c0e4ff', '#003a84']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="flex-1"
