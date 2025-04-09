@@ -1,7 +1,6 @@
 package com.ftc.containerView.controller;
 
 import com.ftc.containerView.model.User;
-import com.ftc.containerView.service.LogService;
 import com.ftc.containerView.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

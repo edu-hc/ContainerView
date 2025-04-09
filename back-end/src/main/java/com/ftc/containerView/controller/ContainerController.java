@@ -1,9 +1,7 @@
 package com.ftc.containerView.controller;
 
 import com.ftc.containerView.model.Container;
-import com.ftc.containerView.repositories.UserRepository;
 import com.ftc.containerView.service.ContainerService;
-import com.ftc.containerView.service.LogService;
 import com.ftc.containerView.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +24,12 @@ public class ContainerController {
 
     private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
     private final ContainerService containerService;
-    private final LogService logService;
     private final UserService userService;
     //private final FirebaseStorageService firebaseStorageService;
 
     @Autowired
-    public ContainerController(ContainerService containerService, LogService logService, UserService userService/*, FirebaseStorageService firebaseStorageService*/) {
+    public ContainerController(ContainerService containerService, UserService userService/*, FirebaseStorageService firebaseStorageService*/) {
         this.containerService = containerService;
-        this.logService = logService;
         //this.firebaseStorageService = firebaseStorageService;
         this.userService = userService;
     }
@@ -44,7 +40,7 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Container> getContainerById(@PathVariable Long id) {
+    public ResponseEntity<Container> getContainerById(@PathVariable String id) {
         Optional<Container> container = containerService.getContainersById(id);
         return container.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -58,7 +54,6 @@ public class ContainerController {
 
         //String imageUrl = firebaseStorageService.uploadFile(file);
         Container container = new Container();
-        container.setUser(userService.getUsersById(userId).orElseThrow(() -> new RuntimeException("Usuário não encontrado")));
         container.setDescription(description);
 
         // Cria o diretório de upload se não existir
@@ -76,13 +71,12 @@ public class ContainerController {
 
         // Gera a URL do arquivo
         container.setImageUrl("http://localhost:8080/uploads/" + fileName);
-
-        logService.saveLog("Container created", LocalDateTime.now().toString());
+        
         return ResponseEntity.ok(containerService.saveContainer(container));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteContainer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteContainer(@PathVariable String id) {
         containerService.deleteContainer(id);
         return ResponseEntity.noContent().build();
     }

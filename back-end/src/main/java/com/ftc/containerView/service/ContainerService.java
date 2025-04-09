@@ -27,15 +27,12 @@ public class ContainerService {
         return containerRepository.findAll();
     }
 
-    public Optional<Container> getContainersById(Long id) {
+    public Optional<Container> getContainersById(String id) {
         return containerRepository.findById(id);
     }
 
-    public List<Container> getContainersByUser(User user) {
-        return containerRepository.findByUser(user);
-    }
 
-    public Container updateContainer(Long containerId, Container updatedContainer) {
+    public Container updateContainer(String containerId, Container updatedContainer) {
 
         Container existingContainer = containerRepository.findById(containerId)
                 .orElseThrow(() -> new RuntimeException("Container não encontrado"));
@@ -54,7 +51,7 @@ public class ContainerService {
 
     }
 
-    public void deleteContainer(Long id) {
+    public void deleteContainer(String id) {
         containerRepository.deleteById(id);
     }
 }

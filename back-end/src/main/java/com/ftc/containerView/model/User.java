@@ -1,7 +1,10 @@
 package com.ftc.containerView.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -20,6 +23,10 @@ public class User {
 
     @Column(name = "role", nullable = false)
     private String role; // Ex: "USER", "ADMIN"
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Operation> operations = new ArrayList<>();
 
 
     public User() {
