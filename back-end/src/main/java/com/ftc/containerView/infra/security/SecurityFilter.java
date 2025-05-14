@@ -2,6 +2,7 @@ package com.ftc.containerView.infra.security;
 
 import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.model.user.User;
+import com.ftc.containerView.model.user.UserRole;
 import com.ftc.containerView.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
@@ -60,6 +63,11 @@ public class SecurityFilter extends OncePerRequestFilter {
                             .map(SimpleGrantedAuthority::new)
                             .toList();
 
+                    logger.debug(String.format("Usuário: %s, Role: %s, Authorities: %s",
+                            user.getCpf(),
+                            user.getRole(),
+                            String.join(", ", authorities.stream().map(a -> a.getAuthority()).toList())));
+
                     var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -77,10 +85,10 @@ public class SecurityFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private static final Map<String, List<String>> ROLE_PERMISSIONS = Map.of(
-            "ADMIN", List.of("ROLE_ADMIN", "ROLE_GERENTE", "ROLE_INSPETOR"),
-            "GERENTE", List.of("ROLE_GERENTE", "ROLE_INSPETOR"),
-            "INSPETOR", List.of("ROLE_INSPETOR")
+    private static final Map<UserRole, List<String>> ROLE_PERMISSIONS = Map.of(
+            UserRole.ADMIN, List.of("ROLE_ADMIN", "ROLE_GERENTE", "ROLE_INSPETOR"),
+            UserRole.GERENTE, List.of("ROLE_GERENTE", "ROLE_INSPETOR"),
+            UserRole.INSPETOR, List.of("ROLE_INSPETOR")
     );
 
     private String recoverToken(HttpServletRequest request) {
