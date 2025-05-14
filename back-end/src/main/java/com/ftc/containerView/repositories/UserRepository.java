@@ -1,6 +1,7 @@
 package com.ftc.containerView.repositories;
 
-import com.ftc.containerView.model.User;
+import com.ftc.containerView.model.user.UserRole;
+import com.ftc.containerView.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +12,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findById(Long id);
-    Optional<User> findByUsername(String username);
-    List<User> findByRole(String role);
-    List<User> findByUsernameContaining(String username);
-
+    List<User> findByRole(UserRole role);
+    Optional<User> findByCpf(String cpf);
+    Optional<User> findByEmail(String email);
 }
