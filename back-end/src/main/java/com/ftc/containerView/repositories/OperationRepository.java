@@ -1,8 +1,8 @@
 package com.ftc.containerView.repositories;
 
-import com.ftc.containerView.model.Container;
-import com.ftc.containerView.model.Operation;
-import com.ftc.containerView.model.User;
+import com.ftc.containerView.model.container.Container;
+import com.ftc.containerView.model.operation.Operation;
+import com.ftc.containerView.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
