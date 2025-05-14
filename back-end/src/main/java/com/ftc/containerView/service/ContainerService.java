@@ -1,7 +1,6 @@
 package com.ftc.containerView.service;
 
-import com.ftc.containerView.model.Container;
-import com.ftc.containerView.model.User;
+import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.repositories.ContainerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,8 +37,8 @@ public class ContainerService {
                 .orElseThrow(() -> new RuntimeException("Container não encontrado"));
 
         // Atualiza os campos se forem diferentes
-        if (!existingContainer.getImageUrl().equals(updatedContainer.getImageUrl())) {
-            existingContainer.setImageUrl(updatedContainer.getImageUrl());
+        if (!existingContainer.getImages().equals(updatedContainer.getImages())) {
+            existingContainer.setImages(updatedContainer.getImages());
         }
 
         if (!existingContainer.getDescription().equals(updatedContainer.getDescription())) {
