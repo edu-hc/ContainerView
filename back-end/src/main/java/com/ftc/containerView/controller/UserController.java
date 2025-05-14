@@ -1,6 +1,7 @@
 package com.ftc.containerView.controller;
 
-import com.ftc.containerView.model.User;
+import com.ftc.containerView.model.user.UserDTO;
+import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +30,6 @@ public class UserController {
         Optional<User> user = userService.getUsersById(id);
         return user.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.saveUser(user));
     }
 
     @PutMapping("/{id}")

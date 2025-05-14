@@ -1,9 +1,7 @@
 package com.ftc.containerView.service;
 
-import com.ftc.containerView.model.User;
+import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,8 +31,8 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public Optional<User> getUsersByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<User> getUsersByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Transactional
@@ -44,12 +42,15 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         // Atualiza os campos se forem diferentes
-        if (!existingUser.getUsername().equals(updatedUser.getUsername())) {
-            existingUser.setUsername(updatedUser.getUsername());
+        if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+            existingUser.setEmail(updatedUser.getEmail());
         }
 
         if (!existingUser.getPassword().equals(updatedUser.getPassword())) {
             existingUser.setPassword(updatedUser.getPassword());
+        }
+        if (!existingUser.getRole().equals(updatedUser.getRole())) {
+            existingUser.setRole(updatedUser.getRole());
         }
 
         // Salva o usuário atualizado
