@@ -8,6 +8,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,6 +29,8 @@ import java.util.stream.Stream;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityFilter.class);
+
     @Autowired
     private TokenService tokenService;
 
@@ -35,10 +39,12 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        logger.info("Interceptando requisição: {} {}", request.getMethod(), request.getRequestURI());
         var token = this.recoverToken(request);
 
         if (token != null && !token.isEmpty()) {
             try {
+                logger.debug("Token recebido: {}", token);
                 // Obter CPF do token
                 var cpf = tokenService.validateToken(token);
 
@@ -49,19 +55,20 @@ public class SecurityFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                    logger.debug("CPF extraído do token: " + cpf);
+                logger.debug("CPF extraído do token: {}", cpf);
 
                 // Consultar o usuário pelo CPF
                 Optional<User> userOptional = userRepository.findByCpf(cpf);
 
                 // Se o usuário existir, autenticar
                 if (userOptional.isPresent()) {
+                    logger.info("Usuário autenticado via token: {}", cpf);
                     var user = userOptional.get();
 
                     var authorities = ROLE_PERMISSIONS.getOrDefault(user.getRole(), Collections.emptyList())
                             .stream()
                             .map(SimpleGrantedAuthority::new)
-                            .toList();
+                            .collect(Collectors.toList());
 
                     logger.debug(String.format("Usuário: %s, Role: %s, Authorities: %s",
                             user.getCpf(),
@@ -73,12 +80,10 @@ public class SecurityFilter extends OncePerRequestFilter {
 
                     logger.debug("Usuário autenticado com sucesso: " + cpf);
                 } else {
-                    // Log informativo (sem exceção)
-                    logger.warn("Usuário não encontrado para o CPF: " + cpf);
+                    logger.warn("Usuário não encontrado para CPF extraído do token: {}", cpf);
                 }
             } catch (Exception e) {
-                // Captura qualquer exceção para não interromper o fluxo
-                logger.error("Erro ao processar token: " + e.getMessage(), e);
+                logger.error("Erro ao processar token de autenticação: {}", e.getMessage(), e);
             }
         }
 
