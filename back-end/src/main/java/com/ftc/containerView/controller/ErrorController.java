@@ -1,5 +1,6 @@
 package com.ftc.containerView.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -15,8 +16,11 @@ public class ErrorController {
     private static final Logger logger = LoggerFactory.getLogger(ErrorController.class);
 
     @GetMapping
-    public ResponseEntity<String> handleError() {
-        logger.warn("Acesso negado ao endpoint /error.");
+    public ResponseEntity<String> handleError(HttpServletRequest request) {
+        long startTime = System.currentTimeMillis();
+        logger.warn("Acesso negado ao endpoint /error. IP: {}", request.getRemoteAddr());
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("/error respondido. Tempo de resposta: {}ms", execTime);
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acesso Negado");
     }
 }

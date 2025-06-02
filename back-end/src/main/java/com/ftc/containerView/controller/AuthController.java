@@ -10,6 +10,7 @@ import com.ftc.containerView.model.auth.VerifyCodeDTO;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
 import com.ftc.containerView.repositories.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,9 @@ public class AuthController {
     private final TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login (@RequestBody LoginDTO login) {
-        logger.info("POST /auth/login - Tentando autenticar usuário com CPF: {}", login.cpf());
+    public ResponseEntity login (@RequestBody LoginDTO login, HttpServletRequest request) {
+        long startTime = System.currentTimeMillis();
+        logger.info("POST /auth/login - Tentando autenticar usuário com CPF: {}. IP: {}", login.cpf(), request.getRemoteAddr());
         try {
             User user = userRepository.findByCpf(login.cpf())
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -47,9 +49,13 @@ public class AuthController {
                     logger.info("2FA habilitado para o usuário: {}", user.getCpf());
                     String token = tempTokenService.generateTempToken(user);
                     emailService.sendVerificationCode(user);
+                    long execTime = System.currentTimeMillis() - startTime;
+                    logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
                     return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
                 }
                 String token = tokenService.generateToken(user);
+                long execTime = System.currentTimeMillis() - startTime;
+                logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
                 return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
             }
             logger.warn("Falha na autenticação para CPF: {}", login.cpf());
@@ -61,8 +67,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<TwoFAResponseDTO> verify(@RequestBody VerifyCodeDTO verifyCodeDTO) {
-        logger.info("POST /auth/verify - Verificando código 2FA para token temporário");
+    public ResponseEntity<TwoFAResponseDTO> verify(@RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
+        long startTime = System.currentTimeMillis();
+        logger.info("POST /auth/verify - Verificando código 2FA para token temporário. IP: {}", request.getRemoteAddr());
         try {
             String userCpf = tempTokenService.validateTempToken(verifyCodeDTO.tempToken());
             if (userCpf.isEmpty()) {
@@ -74,6 +81,8 @@ public class AuthController {
                 User user = userRepository.findByCpf(userCpf)
                         .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
                 String token = tokenService.generateToken(user);
+                long execTime = System.currentTimeMillis() - startTime;
+                logger.info("POST /auth/verify concluído para usuário: {}. Tempo de resposta: {}ms", userCpf, execTime);
                 return ResponseEntity.ok(new TwoFAResponseDTO(user.getCpf(), token, "authenticated"));
             }
             logger.warn("Código 2FA inválido para usuário: {}", userCpf);
@@ -85,8 +94,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity register (@RequestBody UserDTO register) {
-        logger.info("POST /auth/register - Tentando registrar usuário com CPF: {}", register.cpf());
+    public ResponseEntity register (@RequestBody UserDTO register, HttpServletRequest request) {
+        long startTime = System.currentTimeMillis();
+        logger.info("POST /auth/register - Tentando registrar usuário com CPF: {}. IP: {}", register.cpf(), request.getRemoteAddr());
         try {
             Optional<User> user = userRepository.findByCpf(register.cpf());
             if (user.isEmpty()) {
@@ -98,7 +108,8 @@ public class AuthController {
                         register.role(),
                         register.twoFactorEnabled());
                 User savedUser = userRepository.save(newUser);
-                logger.info("Usuário registrado com sucesso: {}", savedUser.getCpf());
+                long execTime = System.currentTimeMillis() - startTime;
+                logger.info("Usuário registrado com sucesso: {}. Tempo de resposta: {}ms", savedUser.getCpf(), execTime);
                 return ResponseEntity.ok(savedUser);
             }
             logger.warn("Tentativa de registro para CPF já existente: {}", register.cpf());
