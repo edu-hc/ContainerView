@@ -2,6 +2,8 @@ package com.ftc.containerView.service;
 
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +14,8 @@ import java.util.Optional;
 @Service
 public class UserService {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
 
     @Autowired
@@ -20,45 +24,102 @@ public class UserService {
     }
 
     public User saveUser(User user) {
-        return userRepository.save(user);
+        logger.info("Salvando novo usuário: {}", user.getCpf());
+        try {
+            User saved = userRepository.save(user);
+            logger.info("Usuário salvo com sucesso: {}", saved.getCpf());
+            return saved;
+        } catch (Exception e) {
+            logger.error("Erro ao salvar usuário: {}. Erro: {}", user.getCpf(), e.getMessage(), e);
+            throw e;
+        }
     }
 
     public List<User> getUsers() {
-        return userRepository.findAll();
+        logger.info("Buscando todos os usuários.");
+        try {
+            List<User> users = userRepository.findAll();
+            logger.info("Encontrados {} usuários.", users.size());
+            return users;
+        } catch (Exception e) {
+            logger.error("Erro ao buscar usuários. Erro: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     public Optional<User> getUsersById(Long id) {
-        return userRepository.findById(id);
+        logger.info("Buscando usuário por ID: {}", id);
+        try {
+            Optional<User> user = userRepository.findById(id);
+            if (user.isPresent()) {
+                logger.info("Usuário com ID {} encontrado.", id);
+            } else {
+                logger.warn("Usuário com ID {} não encontrado.", id);
+            }
+            return user;
+        } catch (Exception e) {
+            logger.error("Erro ao buscar usuário com ID: {}. Erro: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     public Optional<User> getUsersByEmail(String email) {
-        return userRepository.findByEmail(email);
+        logger.info("Buscando usuário por email: {}", email);
+        try {
+            Optional<User> user = userRepository.findByEmail(email);
+            if (user.isPresent()) {
+                logger.info("Usuário com email {} encontrado.", email);
+            } else {
+                logger.warn("Usuário com email {} não encontrado.", email);
+            }
+            return user;
+        } catch (Exception e) {
+            logger.error("Erro ao buscar usuário por email: {}. Erro: {}", email, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Transactional
     public User updateUser(Long userId, User updatedUser) {
-        // Busca o usuário existente
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        // Atualiza os campos se forem diferentes
-        if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
-            existingUser.setEmail(updatedUser.getEmail());
+        logger.info("Atualizando usuário com ID: {}", userId);
+        try {
+            User existingUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            boolean changed = false;
+            if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
+                existingUser.setEmail(updatedUser.getEmail());
+                changed = true;
+            }
+            if (!existingUser.getPassword().equals(updatedUser.getPassword())) {
+                existingUser.setPassword(updatedUser.getPassword());
+                changed = true;
+            }
+            if (!existingUser.getRole().equals(updatedUser.getRole())) {
+                existingUser.setRole(updatedUser.getRole());
+                changed = true;
+            }
+            if (changed) {
+                User saved = userRepository.save(existingUser);
+                logger.info("Usuário com ID {} atualizado com sucesso.", userId);
+                return saved;
+            } else {
+                logger.info("Nenhuma alteração detectada para o usuário com ID {}.", userId);
+                return existingUser;
+            }
+        } catch (Exception e) {
+            logger.error("Erro ao atualizar usuário com ID: {}. Erro: {}", userId, e.getMessage(), e);
+            throw e;
         }
-
-        if (!existingUser.getPassword().equals(updatedUser.getPassword())) {
-            existingUser.setPassword(updatedUser.getPassword());
-        }
-        if (!existingUser.getRole().equals(updatedUser.getRole())) {
-            existingUser.setRole(updatedUser.getRole());
-        }
-
-        // Salva o usuário atualizado
-        return userRepository.save(existingUser);
-
     }
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        logger.info("Excluindo usuário com ID: {}", id);
+        try {
+            userRepository.deleteById(id);
+            logger.info("Usuário com ID {} excluído com sucesso.", id);
+        } catch (Exception e) {
+            logger.error("Erro ao excluir usuário com ID: {}. Erro: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 }

@@ -28,51 +28,61 @@ public class EmailService {
 
     @Transactional
     public void sendVerificationCode(User user) {
-        // Gera um código de 6 dígitos
-        String code = generateRandomCode();
-
-        // Remove códigos anteriores
-        verificationCodeRepository.deleteByUserCpf(user.getCpf());
-
-        // Salva o novo código
-        VerificationCode verificationCode = new VerificationCode(
-                user.getCpf(),
-                code,
-                CODE_EXPIRATION_MINUTES
-        );
-        verificationCodeRepository.save(verificationCode);
-
-        // Envia o email
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(user.getEmail());
-        message.setSubject("Código de Verificação - Container View");
-        message.setText(String.format(
-                "Olá %s,\n\nSeu código de verificação é: %s\n\nEste código expira em %d minutos.",
-                user.getFirstName(), code, CODE_EXPIRATION_MINUTES
-        ));
-
+        logger.info("Enviando código de verificação para o usuário: {}", user.getCpf());
         try {
+            // Gera um código de 6 dígitos
+            String code = generateRandomCode();
+
+            // Remove códigos anteriores
+            verificationCodeRepository.deleteByUserCpf(user.getCpf());
+
+            // Salva o novo código
+            VerificationCode verificationCode = new VerificationCode(
+                    user.getCpf(),
+                    code,
+                    CODE_EXPIRATION_MINUTES
+            );
+            verificationCodeRepository.save(verificationCode);
+
+            // Envia o email
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(user.getEmail());
+            message.setSubject("Código de Verificação - Container View");
+            message.setText(String.format(
+                    "Olá %s,\n\nSeu código de verificação é: %s\n\nEste código expira em %d minutos.",
+                    user.getFirstName(), code, CODE_EXPIRATION_MINUTES
+            ));
+
             emailSender.send(message);
-            logger.info("Código de verificação enviado para: {}", user.getEmail());
+            logger.info("Código de verificação enviado para o e-mail: {}", user.getEmail());
         } catch (Exception e) {
-            logger.error("Erro ao enviar email: {}", e.getMessage());
+            logger.error("Erro ao enviar código de verificação para o usuário: {}. Erro: {}", user.getCpf(), e.getMessage(), e);
             throw new RuntimeException("Erro ao enviar o código de verificação por email", e);
         }
     }
 
     @Transactional
     public boolean verifyCode(String userCpf, String code) {
-        return verificationCodeRepository.findFirstByUserCpfOrderByExpiryDateDesc(userCpf)
-                .map(verificationCode -> {
-                    boolean isValid = verificationCode.getCode().equals(code) && !verificationCode.isExpired();
-                    if (isValid) {
-                        // Remove o código após o uso bem-sucedido
-                        verificationCodeRepository.delete(verificationCode);
-                    }
-                    return isValid;
-                })
-                .orElse(false);
+        logger.info("Verificando código de verificação para CPF: {}", userCpf);
+        try {
+            return verificationCodeRepository.findFirstByUserCpfOrderByExpiryDateDesc(userCpf)
+                    .map(verificationCode -> {
+                        boolean isValid = verificationCode.getCode().equals(code) && !verificationCode.isExpired();
+                        if (isValid) {
+                            // Remove o código após o uso bem-sucedido
+                            verificationCodeRepository.delete(verificationCode);
+                            logger.info("Código de verificação válido para CPF: {}", userCpf);
+                        } else {
+                            logger.warn("Código de verificação inválido ou expirado para CPF: {}", userCpf);
+                        }
+                        return isValid;
+                    })
+                    .orElse(false);
+        } catch (Exception e) {
+            logger.error("Erro ao verificar código de verificação para CPF: {}. Erro: {}", userCpf, e.getMessage(), e);
+            throw e;
+        }
     }
 
     private String generateRandomCode() {
