@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -14,17 +15,29 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Exception Handler LIVRE DE CONFLITOS.
+ *
+ * NÃO estende ResponseEntityExceptionHandler para evitar qualquer conflito.
+ * Trata todas as exceções com @ExceptionHandler.
+ *
+ * ✅ RESOLVE TODOS OS PROBLEMAS:
+ * - Zero conflitos de handlers
+ * - Não vaza informações sensíveis
+ * - Logs estruturados
+ * - IDs únicos para rastreamento
+ * - Respostas padronizadas
+ */
 @ControllerAdvice
 @Slf4j
-public class RestExceptionController extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
     // ================================================================================================
-    // EXCEÇÕES DE NEGÓCIO (4xx)
+    // EXCEÇÕES CUSTOMIZADAS DE NEGÓCIO
     // ================================================================================================
 
     @ExceptionHandler(UserNotFoundException.class)
@@ -99,20 +112,40 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(ImageStorageException.class)
+    public ResponseEntity<RestErrorMessage> handleImageStorage(ImageStorageException ex, HttpServletRequest request) {
+        String errorId = generateErrorId();
+        String currentUser = getCurrentUsername();
+
+        log.error("Erro no armazenamento de imagem - ID: {} - Path: {} - IP: {} - User: {} - Erro: {}",
+                errorId, request.getRequestURI(), getClientIP(request), currentUser, ex.getMessage(), ex);
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .code("IMAGE_STORAGE_ERROR")
+                .message("Erro ao processar imagem. Tente novamente.")
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
     // ================================================================================================
-    // EXCEÇÕES DE SEGURANÇA (401/403)
+    // EXCEÇÕES DE SEGURANÇA
     // ================================================================================================
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<RestErrorMessage> handleUsernameNotFound(UsernameNotFoundException ex, HttpServletRequest request) {
         String errorId = generateErrorId();
+        String clientIP = getClientIP(request);
 
-        log.warn("Tentativa de login com usuário inexistente - ID: {} - Path: {} - IP: {}",
-                errorId, request.getRequestURI(), getClientIP(request));
+        log.warn("Tentativa de login falhada - ID: {} - IP: {} - Path: {}",
+                errorId, clientIP, request.getRequestURI());
 
         RestErrorMessage error = RestErrorMessage.builder()
                 .code("AUTHENTICATION_FAILED")
-                .message("Credenciais inválidas") // ⚠️ Não revelar se usuário existe ou não
+                .message("Credenciais inválidas") // Mensagem genérica por segurança
                 .timestamp(LocalDateTime.now())
                 .errorId(errorId)
                 .path(request.getRequestURI())
@@ -158,7 +191,7 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
     }
 
     // ================================================================================================
-    // EXCEÇÕES DE VALIDAÇÃO (400)
+    // EXCEÇÕES DE VALIDAÇÃO E PARÂMETROS
     // ================================================================================================
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -175,24 +208,6 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
         RestErrorMessage error = RestErrorMessage.builder()
                 .code("VALIDATION_ERROR")
                 .message("Dados inválidos: " + violations)
-                .timestamp(LocalDateTime.now())
-                .errorId(errorId)
-                .path(request.getRequestURI())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<RestErrorMessage> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        String errorId = generateErrorId();
-
-        log.warn("Tipo de parâmetro inválido - ID: {} - Path: {} - IP: {} - Parâmetro: {} - Valor: {}",
-                errorId, request.getRequestURI(), getClientIP(request), ex.getName(), ex.getValue());
-
-        RestErrorMessage error = RestErrorMessage.builder()
-                .code("INVALID_PARAMETER_TYPE")
-                .message("Parâmetro inválido: " + ex.getName())
                 .timestamp(LocalDateTime.now())
                 .errorId(errorId)
                 .path(request.getRequestURI())
@@ -219,26 +234,22 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // ================================================================================================
-    // EXCEÇÕES DE INFRAESTRUTURA (500)
-    // ================================================================================================
-
-    @ExceptionHandler(ImageStorageException.class)
-    public ResponseEntity<RestErrorMessage> handleImageStorage(ImageStorageException ex, HttpServletRequest request) {
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<RestErrorMessage> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         String errorId = generateErrorId();
 
-        log.error("Erro no armazenamento de imagem - ID: {} - Path: {} - IP: {} - Erro: {}",
-                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage(), ex);
+        log.warn("Tipo de parâmetro inválido - ID: {} - Path: {} - IP: {} - Parâmetro: {} - Valor: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getName(), ex.getValue());
 
         RestErrorMessage error = RestErrorMessage.builder()
-                .code("IMAGE_STORAGE_ERROR")
-                .message("Erro ao processar imagem. Tente novamente.")
+                .code("INVALID_PARAMETER_TYPE")
+                .message("Parâmetro inválido: " + ex.getName())
                 .timestamp(LocalDateTime.now())
                 .errorId(errorId)
                 .path(request.getRequestURI())
                 .build();
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -260,19 +271,21 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
     }
 
     // ================================================================================================
-    // HANDLER GENÉRICO - ÚLTIMO RECURSO (500)
+    // HANDLER GENÉRICO - ÚLTIMO RECURSO (CRÍTICO PARA SEGURANÇA)
     // ================================================================================================
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestErrorMessage> handleGeneral(Exception ex, HttpServletRequest request) {
         String errorId = generateErrorId();
+        String currentUser = getCurrentUsername();
+        String clientIP = getClientIP(request);
 
-        // ✅ LOG COMPLETO para debugging (com stack trace)
+        // ✅ LOG COMPLETO para debugging (só no servidor)
         log.error("ERRO INTERNO NÃO TRATADO - ID: {} - Path: {} - IP: {} - User: {} - Classe: {} - Mensagem: {}",
-                errorId, request.getRequestURI(), getClientIP(request), getCurrentUsername(),
+                errorId, request.getRequestURI(), clientIP, currentUser,
                 ex.getClass().getSimpleName(), ex.getMessage(), ex);
 
-        // ✅ RESPOSTA SEGURA (sem stack trace)
+        // ✅ RESPOSTA SEGURA (sem vazamento de informações)
         RestErrorMessage error = RestErrorMessage.builder()
                 .code("INTERNAL_ERROR")
                 .message("Erro interno do servidor. Entre em contato com o suporte informando o ID: " + errorId)
@@ -306,10 +319,7 @@ public class RestExceptionController extends ResponseEntityExceptionHandler {
 
     private String getCurrentUsername() {
         try {
-            return org.springframework.security.core.context.SecurityContextHolder
-                    .getContext()
-                    .getAuthentication()
-                    .getName();
+            return SecurityContextHolder.getContext().getAuthentication().getName();
         } catch (Exception e) {
             return "anonymous";
         }
