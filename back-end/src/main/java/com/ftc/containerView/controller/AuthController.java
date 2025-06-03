@@ -1,5 +1,6 @@
 package com.ftc.containerView.controller;
 
+import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.infra.security.auth.TempTokenService;
 import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.infra.security.auth.email.EmailService;
@@ -40,83 +41,68 @@ public class AuthController {
     public ResponseEntity login (@RequestBody LoginDTO login, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/login - Tentando autenticar usuário com CPF: {}. IP: {}", login.cpf(), request.getRemoteAddr());
-        try {
-            User user = userRepository.findByCpf(login.cpf())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            if(passwordEncoder.matches(login.password(), user.getPassword())) {
-                logger.info("Usuário autenticado com sucesso: {}", user.getCpf());
-                if(user.isTwoFactorEnabled()) {
-                    logger.info("2FA habilitado para o usuário: {}", user.getCpf());
-                    String token = tempTokenService.generateTempToken(user);
-                    emailService.sendVerificationCode(user);
-                    long execTime = System.currentTimeMillis() - startTime;
-                    logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
-                    return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
-                }
-                String token = tokenService.generateToken(user);
+        User user = userRepository.findByCpf(login.cpf())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        if(passwordEncoder.matches(login.password(), user.getPassword())) {
+            logger.info("Usuário autenticado com sucesso: {}", user.getCpf());
+            if(user.isTwoFactorEnabled()) {
+                logger.info("2FA habilitado para o usuário: {}", user.getCpf());
+                String token = tempTokenService.generateTempToken(user);
+                emailService.sendVerificationCode(user);
                 long execTime = System.currentTimeMillis() - startTime;
                 logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
                 return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
             }
-            logger.warn("Falha na autenticação para CPF: {}", login.cpf());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Erro ao autenticar usuário com CPF: {}. Erro: {}", login.cpf(), e.getMessage(), e);
-            return ResponseEntity.status(500).build();
+            String token = tokenService.generateToken(user);
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
+            return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
         }
+        logger.warn("Falha na autenticação para CPF: {}", login.cpf());
+        return ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/verify")
     public ResponseEntity<TwoFAResponseDTO> verify(@RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/verify - Verificando código 2FA para token temporário. IP: {}", request.getRemoteAddr());
-        try {
-            String userCpf = tempTokenService.validateTempToken(verifyCodeDTO.tempToken());
-            if (userCpf.isEmpty()) {
-                logger.warn("Token temporário inválido na verificação 2FA");
-                return ResponseEntity.badRequest().build();
-            }
-            if (emailService.verifyCode(userCpf, verifyCodeDTO.code())) {
-                logger.info("Código 2FA válido para usuário: {}", userCpf);
-                User user = userRepository.findByCpf(userCpf)
-                        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-                String token = tokenService.generateToken(user);
-                long execTime = System.currentTimeMillis() - startTime;
-                logger.info("POST /auth/verify concluído para usuário: {}. Tempo de resposta: {}ms", userCpf, execTime);
-                return ResponseEntity.ok(new TwoFAResponseDTO(user.getCpf(), token, "authenticated"));
-            }
-            logger.warn("Código 2FA inválido para usuário: {}", userCpf);
+        String userCpf = tempTokenService.validateTempToken(verifyCodeDTO.tempToken());
+        if (userCpf.isEmpty()) {
+            logger.warn("Token temporário inválido na verificação 2FA");
             return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Erro ao verificar código 2FA. Erro: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).build();
         }
+        if (emailService.verifyCode(userCpf, verifyCodeDTO.code())) {
+            logger.info("Código 2FA válido para usuário: {}", userCpf);
+            User user = userRepository.findByCpf(userCpf)
+                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+            String token = tokenService.generateToken(user);
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("POST /auth/verify concluído para usuário: {}. Tempo de resposta: {}ms", userCpf, execTime);
+            return ResponseEntity.ok(new TwoFAResponseDTO(user.getCpf(), token, "authenticated"));
+        }
+        logger.warn("Código 2FA inválido para usuário: {}", userCpf);
+        return ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/register")
     public ResponseEntity register (@RequestBody UserDTO register, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/register - Tentando registrar usuário com CPF: {}. IP: {}", register.cpf(), request.getRemoteAddr());
-        try {
-            Optional<User> user = userRepository.findByCpf(register.cpf());
-            if (user.isEmpty()) {
-                User newUser = new User(register.firstName(),
-                        register.lastName(),
-                        register.cpf(),
-                        register.email(),
-                        passwordEncoder.encode(register.password()),
-                        register.role(),
-                        register.twoFactorEnabled());
-                User savedUser = userRepository.save(newUser);
-                long execTime = System.currentTimeMillis() - startTime;
-                logger.info("Usuário registrado com sucesso: {}. Tempo de resposta: {}ms", savedUser.getCpf(), execTime);
-                return ResponseEntity.ok(savedUser);
-            }
-            logger.warn("Tentativa de registro para CPF já existente: {}", register.cpf());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Erro ao registrar usuário com CPF: {}. Erro: {}", register.cpf(), e.getMessage(), e);
-            return ResponseEntity.status(500).build();
+        Optional<User> user = userRepository.findByCpf(register.cpf());
+        if (user.isEmpty()) {
+            User newUser = new User(register.firstName(),
+                    register.lastName(),
+                    register.cpf(),
+                    register.email(),
+                    passwordEncoder.encode(register.password()),
+                    register.role(),
+                    register.twoFactorEnabled());
+            User savedUser = userRepository.save(newUser);
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("Usuário registrado com sucesso: {}. Tempo de resposta: {}ms", savedUser.getCpf(), execTime);
+            return ResponseEntity.ok(savedUser);
         }
+        logger.warn("Tentativa de registro para CPF já existente: {}", register.cpf());
+        return ResponseEntity.badRequest().build();
     }
 }

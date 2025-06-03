@@ -28,49 +28,29 @@ public class ContainerController {
     public ResponseEntity<List<Container>> getAllContainers(HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("GET /containers - Buscando todos os containers. IP: {}", request.getRemoteAddr());
-        try {
-            List<Container> containers = containerService.getContainers();
-            long execTime = System.currentTimeMillis() - startTime;
-            logger.info("GET /containers concluído. Encontrados {} containers. Tempo de resposta: {}ms", containers.size(), execTime);
-            return ResponseEntity.ok(containers);
-        } catch (Exception e) {
-            logger.error("Erro ao buscar containers. Erro: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).build();
-        }
+        List<Container> containers = containerService.getContainers();
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /containers concluído. Encontrados {} containers. Tempo de resposta: {}ms", containers.size(), execTime);
+        return ResponseEntity.ok(containers);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Container> getContainerById(@PathVariable String id, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("GET /containers/{} - Buscando container por ID. IP: {}", id, request.getRemoteAddr());
-        try {
-            Optional<Container> container = containerService.getContainersById(id);
-            if (container.isPresent()) {
-                long execTime = System.currentTimeMillis() - startTime;
-                logger.info("Container com ID {} encontrado. Tempo de resposta: {}ms", id, execTime);
-                return ResponseEntity.ok(container.get());
-            } else {
-                logger.warn("Container com ID {} não encontrado.", id);
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            logger.error("Erro ao buscar container com ID: {}. Erro: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(500).build();
-        }
+        Container container = containerService.getContainersById(id);
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("Container com ID {} encontrado. Tempo de resposta: {}ms", id, execTime);
+        return ResponseEntity.ok(container);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContainer(@PathVariable String id, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("DELETE /containers/{} - Excluindo container. IP: {}", id, request.getRemoteAddr());
-        try {
-            containerService.deleteContainer(id);
-            long execTime = System.currentTimeMillis() - startTime;
-            logger.info("Container com ID {} excluído com sucesso. Tempo de resposta: {}ms", id, execTime);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            logger.error("Erro ao excluir container com ID: {}. Erro: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(500).build();
-        }
+        containerService.deleteContainer(id);
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("Container com ID {} excluído com sucesso. Tempo de resposta: {}ms", id, execTime);
+        return ResponseEntity.noContent().build();
     }
 }

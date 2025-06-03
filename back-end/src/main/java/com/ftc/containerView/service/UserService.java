@@ -1,5 +1,6 @@
 package com.ftc.containerView.service;
 
+import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.UserRepository;
 import org.slf4j.Logger;
@@ -29,54 +30,44 @@ public class UserService {
             User saved = userRepository.save(user);
             logger.info("Usuário salvo com sucesso: {}", saved.getCpf());
             return saved;
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             logger.error("Erro ao salvar usuário: {}. Erro: {}", user.getCpf(), e.getMessage(), e);
-            throw e;
+            throw new UserNotFoundException("Usuário nao encontrado com ID: " + user.getId());
         }
     }
 
     public List<User> getUsers() {
         logger.info("Buscando todos os usuários.");
-        try {
-            List<User> users = userRepository.findAll();
-            logger.info("Encontrados {} usuários.", users.size());
-            return users;
-        } catch (Exception e) {
-            logger.error("Erro ao buscar usuários. Erro: {}", e.getMessage(), e);
-            throw e;
-        }
+        List<User> users = userRepository.findAll();
+        logger.info("Encontrados {} usuários.", users.size());
+        return users;
+
     }
 
-    public Optional<User> getUsersById(Long id) {
+    public User getUsersById(Long id) {
         logger.info("Buscando usuário por ID: {}", id);
-        try {
             Optional<User> user = userRepository.findById(id);
             if (user.isPresent()) {
                 logger.info("Usuário com ID {} encontrado.", id);
+                return user.get();
             } else {
                 logger.warn("Usuário com ID {} não encontrado.", id);
+                throw new UserNotFoundException("Usuário nao encontrado com ID: " + id);
             }
-            return user;
-        } catch (Exception e) {
-            logger.error("Erro ao buscar usuário com ID: {}. Erro: {}", id, e.getMessage(), e);
-            throw e;
-        }
+
     }
 
-    public Optional<User> getUsersByEmail(String email) {
+    public User getUsersByEmail(String email) {
         logger.info("Buscando usuário por email: {}", email);
-        try {
             Optional<User> user = userRepository.findByEmail(email);
             if (user.isPresent()) {
                 logger.info("Usuário com email {} encontrado.", email);
+                return user.get();
             } else {
                 logger.warn("Usuário com email {} não encontrado.", email);
+                throw new UserNotFoundException("Usuário nao encontrado com email: " + email);
             }
-            return user;
-        } catch (Exception e) {
-            logger.error("Erro ao buscar usuário por email: {}. Erro: {}", email, e.getMessage(), e);
-            throw e;
-        }
+
     }
 
     @Transactional
@@ -84,7 +75,7 @@ public class UserService {
         logger.info("Atualizando usuário com ID: {}", userId);
         try {
             User existingUser = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                    .orElseThrow(() -> new UserNotFoundException("Usuario nao encontrado com ID: " + userId));
             boolean changed = false;
             if (!existingUser.getEmail().equals(updatedUser.getEmail())) {
                 existingUser.setEmail(updatedUser.getEmail());
@@ -106,6 +97,8 @@ public class UserService {
                 logger.info("Nenhuma alteração detectada para o usuário com ID {}.", userId);
                 return existingUser;
             }
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             logger.error("Erro ao atualizar usuário com ID: {}. Erro: {}", userId, e.getMessage(), e);
             throw e;
@@ -115,6 +108,10 @@ public class UserService {
     public void deleteUser(Long id) {
         logger.info("Excluindo usuário com ID: {}", id);
         try {
+            if (!userRepository.existsById(id)) {
+                logger.warn("Usuário com ID {} nao encontrado.", id);
+                throw new UserNotFoundException("Usuário nao encontrado com ID: " + id);
+            }
             userRepository.deleteById(id);
             logger.info("Usuário com ID {} excluído com sucesso.", id);
         } catch (Exception e) {

@@ -1,5 +1,8 @@
 package com.ftc.containerView.service;
 
+import com.ftc.containerView.infra.errorhandling.exceptions.ContainerExistsException;
+import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
+import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.model.operation.OperationDTO;
 import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.model.operation.Operation;
@@ -36,32 +39,24 @@ public class OperationService {
 
     public List<Operation> findOperations() {
         logger.debug("Buscando todas as operações");
-        try {
-            List<Operation> operations = operationRepository.findAll();
-            logger.debug("Encontradas {} operações", operations.size());
-            return operations;
-        } catch (Exception e) {
-            logger.error("Erro ao buscar todas as operações. Erro: {}", e.getMessage(), e);
-            throw e;
-        }
+        List<Operation> operations = operationRepository.findAll();
+        logger.debug("Encontradas {} operações", operations.size());
+        return operations;
     }
-    public Optional<Operation> findOperationById(Long id) {
+
+    public Operation findOperationById(Long id) {
         logger.debug("Buscando operação com ID: {}", id);
 
-        try {
-            Optional<Operation> operation = operationRepository.findById(id);
+        Optional<Operation> operation = operationRepository.findById(id);
 
-            if (operation.isPresent()) {
-                logger.debug("Operação com ID {} encontrada", id);
-            } else {
-                logger.debug("Operação com ID {} não encontrada", id);
-            }
-
-            return operation;
-        } catch (Exception e) {
-            logger.error("Erro ao buscar operação com ID: {}. Erro: {}", id, e.getMessage(), e);
-            throw e;
+        if (operation.isPresent()) {
+            logger.debug("Operação com ID {} encontrada", id);
+            return operation.get();
+        } else {
+            logger.debug("Operação com ID {} não encontrada", id);
+            throw new OperationNotFoundException("Operação com ID " + id + " nao encontrada");
         }
+
     }
 
     public Optional<Operation> findOperationByContainer(Container container) {return operationRepository.findByContainer(container);}
@@ -77,14 +72,14 @@ public class OperationService {
     public List<Operation> findOperationByCreatedAtBetween(LocalDateTime createdAt1, LocalDateTime createdAt2) { return operationRepository.findByCreatedAtBetween(createdAt1, createdAt2); }
 
     public void deleteOperation(Operation operation) {
-        if (operation == null) {
-            logger.warn("Tentativa de excluir operação nula");
-            return;
-        }
 
         logger.debug("Excluindo operação com ID: {}", operation.getId());
 
         try {
+            if(!operationRepository.existsById(operation.getId())) {
+                logger.warn("Operação com ID {} nao encontrada", operation.getId());
+                throw new OperationNotFoundException("Operação com ID " + operation.getId() + " nao encontrada");
+            }
             operationRepository.delete(operation);
             logger.debug("Operação com ID {} excluída com sucesso", operation.getId());
         } catch (Exception e) {
@@ -105,12 +100,16 @@ public class OperationService {
             User user = userRepository.findById(operationDTO.userId())
                     .orElseThrow(() -> {
                         logger.error("Usuário não encontrado com ID: {}", operationDTO.userId());
-                        return new EntityNotFoundException("Usuário não encontrado com ID: " + operationDTO.userId());
+                        return new UserNotFoundException("Usuário não encontrado com ID: " + operationDTO.userId());
                     });
             logger.debug("Usuário encontrado: {}", user.getId());
 
             // Criando o container
             logger.debug("Criando novo container com ID: {}", operationDTO.containerId());
+            if (containerRepository.existsById(operationDTO.containerId())) {
+                logger.warn("Container com ID {} ja cadastrado", operationDTO.containerId());
+                throw new ContainerExistsException("Container com ID " + operationDTO.containerId() + " ja cadastrado");
+            }
             int imagesCount = operationDTO.containerImages() != null ? operationDTO.containerImages().size() : 0;
             logger.debug("Container terá {} imagens associadas", imagesCount);
 

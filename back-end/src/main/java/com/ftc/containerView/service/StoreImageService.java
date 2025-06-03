@@ -1,6 +1,7 @@
 package com.ftc.containerView.service;
 
 import com.ftc.containerView.infra.aws.S3Service;
+import com.ftc.containerView.infra.errorhandling.exceptions.ImageStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class StoreImageService {
         this.s3Service = s3Service;
     }
 
-    public List<String> storeImages(MultipartFile[] images, String containerId) throws IOException {
+    public List<String> storeImages(MultipartFile[] images, String containerId) {
         logger.info("Armazenando {} imagens para o container {}.", images != null ? images.length : 0, containerId);
         int imageCount = 0;
         List<String> imageKeys = new ArrayList<>();
@@ -35,9 +36,9 @@ public class StoreImageService {
                 imageKeys.add(s3Service.uploadFile(image.getBytes(), fileName, "application/jpg"));
                 logger.info("Imagem {} armazenada com sucesso como {}.", imageCount, fileName);
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 logger.error("Erro ao armazenar imagem {} para container {}: {}", fileName, containerId, e.getMessage(), e);
-                throw e;
+                throw new ImageStorageException("Erro ao armazenar imagem para o container: " + containerId, e);
             }
         }
         logger.info("Todas as imagens processadas para o container {}.", containerId);

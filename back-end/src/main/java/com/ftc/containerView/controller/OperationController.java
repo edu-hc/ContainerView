@@ -40,18 +40,13 @@ public class OperationController {
 
         long startTime = System.currentTimeMillis();
 
-        try {
-            List<Operation> operations = operationService.findOperations();
+        List<Operation> operations = operationService.findOperations();
 
-            long executionTime = System.currentTimeMillis() - startTime;
-            logger.info("GET /operations concluído. Encontradas {} operações. Tempo de resposta: {}ms",
-                    operations.size(), executionTime);
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /operations concluído. Encontradas {} operações. Tempo de resposta: {}ms",
+                operations.size(), executionTime);
 
-            return ResponseEntity.ok(operations);
-        } catch (Exception e) {
-            logger.error("Erro ao buscar todas as operações. Erro: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return ResponseEntity.ok(operations);
     }
 
     @GetMapping("/{id}")
@@ -61,21 +56,11 @@ public class OperationController {
 
         long startTime = System.currentTimeMillis();
 
-        try {
-            Optional<Operation> operation = operationService.findOperationById(id);
+        Operation operation = operationService.findOperationById(id);
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /operations/{} concluído com sucesso. Tempo de resposta: {}ms", id, executionTime);
+        return ResponseEntity.ok(operation);
 
-            if (operation.isPresent()) {
-                long executionTime = System.currentTimeMillis() - startTime;
-                logger.info("GET /operations/{} concluído com sucesso. Tempo de resposta: {}ms", id, executionTime);
-                return ResponseEntity.ok(operation.get());
-            } else {
-                logger.warn("Operação com ID {} não encontrada", id);
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            logger.error("Erro ao buscar operação com ID: {}. Erro: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -92,55 +77,35 @@ public class OperationController {
         logger.debug("Recebidos {} arquivos de imagem para o container {}", imageCount, containerId);
 
         long startTime = System.currentTimeMillis();
+         OperationDTO operation = new OperationDTO(
+                 containerId,
+                 containerDescription,
+                 new ArrayList<>(),
+                 userId);
 
-        try {
-            OperationDTO operation = new OperationDTO(
-                    containerId,
-                    containerDescription,
-                    new ArrayList<>(),
-                    userId);
+         if (imageFiles != null) {
+             logger.debug("Processando {} imagens para o container {}", imageFiles.length, containerId);
+             operation.containerImages().addAll(storeImageService.storeImages(imageFiles, operation.containerId()));
+             logger.debug("Imagens processadas com sucesso para o container {}", containerId);
+         }
 
-            if (imageFiles != null) {
-                logger.debug("Processando {} imagens para o container {}", imageFiles.length, containerId);
-                operation.containerImages().addAll(storeImageService.storeImages(imageFiles, operation.containerId()));
-                logger.debug("Imagens processadas com sucesso para o container {}", containerId);
-            }
+         Operation newOperation = operationService.createOperation(operation);
 
-            Operation newOperation = operationService.createOperation(operation);
+         long executionTime = System.currentTimeMillis() - startTime;
+         logger.info("POST /operations concluído. Operação criada com ID: {}. Tempo de resposta: {}ms",
+                 newOperation.getId(), executionTime);
 
-            long executionTime = System.currentTimeMillis() - startTime;
-            logger.info("POST /operations concluído. Operação criada com ID: {}. Tempo de resposta: {}ms",
-                    newOperation.getId(), executionTime);
-
-            return new ResponseEntity<>(newOperation, HttpStatus.CREATED);
-        } catch (Exception e) {
-            logger.error("Erro ao criar operação. ContainerId: {}, UserId: {}. Erro: {}",
-                    containerId, userId, e.getMessage(), e);
-            throw e; // Repassando a exceção para que seja tratada pelo controlador de exceções global
-        }
+         return new ResponseEntity<>(newOperation, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOperation(@PathVariable Long id, HttpServletRequest request) {
 
-        Optional<Operation> operation = null;
-        try {
-            operation = operationService.findOperationById(id);
+        Operation operation = operationService.findOperationById(id);
+        logger.info("DELETE /operations/{} - Excluindo operação. IP: {}", operation.getId(), request.getRemoteAddr());
+        operationService.deleteOperation(operation);
+        logger.info("Operação com ID {} excluída com sucesso", operation.getId());
+        return ResponseEntity.noContent().build();
 
-            if (operation.isPresent()) {
-                logger.info("DELETE /operations/{} - Excluindo operação. IP: {}", operation.get().getId(), request.getRemoteAddr());
-                operationService.deleteOperation(operation.get());
-                logger.info("Operação com ID {} excluída com sucesso", operation.get().getId());
-
-                return ResponseEntity.noContent().build();
-
-            } else {
-                logger.warn("Operação com ID {} não encontrada", id);
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            logger.error("Erro ao excluir operação com ID: {}. Erro: {}", operation.get().getId(), e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 }
