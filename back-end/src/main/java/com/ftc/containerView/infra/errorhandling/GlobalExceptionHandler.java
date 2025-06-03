@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,9 +28,9 @@ import java.util.UUID;
  * Exception Handler com Sistema de Monitoramento Integrado.
  *
  * Baseado no seu código existente, mas com adição de:
- * - 📊 Métricas automáticas (ErrorMetricsCollector)
- * - 🚨 Alertas inteligentes (ErrorAlertService)
- * - 📈 Observabilidade completa
+ * - Métricas automáticas (ErrorMetricsCollector)
+ * - Alertas inteligentes (ErrorAlertService)
+ * - Observabilidade completa
  *
  * Mantém compatibilidade com RestErrorMessage existente.
  */
@@ -53,7 +54,7 @@ public class GlobalExceptionHandler {
         log.warn("Usuário não encontrado - ID: {} - Path: {} - IP: {} - Detalhes: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
 
-        // 📊 MÉTRICAS (erro de negócio, sem alertas)
+        // MÉTRICAS (erro de negócio, sem alertas)
         metricsCollector.recordError("USER_NOT_FOUND", "404", request.getRequestURI());
         metricsCollector.recordDuration(sample, "user_not_found");
 
@@ -77,7 +78,7 @@ public class GlobalExceptionHandler {
         log.warn("Operação não encontrada - ID: {} - Path: {} - IP: {} - Detalhes: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("OPERATION_NOT_FOUND", "404", request.getRequestURI());
         metricsCollector.recordDuration(sample, "operation_not_found");
 
@@ -101,7 +102,7 @@ public class GlobalExceptionHandler {
         log.warn("Container não encontrado - ID: {} - Path: {} - IP: {} - Detalhes: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("CONTAINER_NOT_FOUND", "404", request.getRequestURI());
         metricsCollector.recordDuration(sample, "container_not_found");
 
@@ -125,7 +126,7 @@ public class GlobalExceptionHandler {
         log.warn("Container já existe - ID: {} - Path: {} - IP: {} - Detalhes: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("CONTAINER_ALREADY_EXISTS", "409", request.getRequestURI());
         metricsCollector.recordDuration(sample, "container_exists");
 
@@ -154,7 +155,7 @@ public class GlobalExceptionHandler {
         log.error("Erro no armazenamento de imagem - ID: {} - Path: {} - IP: {} - User: {} - Erro: {}",
                 errorId, request.getRequestURI(), getClientIP(request), currentUser, ex.getMessage(), ex);
 
-        // 📊 MÉTRICAS + 🚨 ALERTAS (infraestrutura é crítico)
+        // MÉTRICAS + ALERTAS (infraestrutura é crítico)
         metricsCollector.recordError("IMAGE_STORAGE_ERROR", "500", request.getRequestURI());
         metricsCollector.recordDuration(sample, "image_storage_error");
 
@@ -187,12 +188,12 @@ public class GlobalExceptionHandler {
         log.warn("Tentativa de login falhada - ID: {} - IP: {} - Path: {}",
                 errorId, clientIP, request.getRequestURI());
 
-        // 📊 MÉTRICAS + evento de segurança
+        // MÉTRICAS + evento de segurança
         metricsCollector.recordError("AUTHENTICATION_FAILED", "401", request.getRequestURI());
         metricsCollector.recordSecurityEvent("failed_login", clientIP, request.getRequestURI());
         metricsCollector.recordDuration(sample, "authentication_failed");
 
-        // 🚨 ALERTAS apenas se muitas tentativas (threshold)
+        // ALERTAS apenas se muitas tentativas (threshold)
         alertService.processError("AUTHENTICATION_FAILED", errorId, request.getRequestURI(),
                 "Falha na autenticação", clientIP);
 
@@ -217,12 +218,12 @@ public class GlobalExceptionHandler {
         log.warn("Falha na autenticação - ID: {} - Path: {} - IP: {} - Tipo: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getClass().getSimpleName());
 
-        // 📊 MÉTRICAS + evento de segurança
+        // MÉTRICAS + evento de segurança
         metricsCollector.recordError("AUTHENTICATION_FAILED", "401", request.getRequestURI());
         metricsCollector.recordSecurityEvent("authentication_failed", currentUser, request.getRequestURI());
         metricsCollector.recordDuration(sample, "authentication_failed");
 
-        // 🚨 ALERTAS por threshold
+        // ALERTAS por threshold
         alertService.processError("AUTHENTICATION_FAILED", errorId, request.getRequestURI(),
                 ex.getMessage(), currentUser);
 
@@ -247,12 +248,12 @@ public class GlobalExceptionHandler {
         log.warn("Acesso negado - ID: {} - Path: {} - IP: {} - User: {}",
                 errorId, request.getRequestURI(), getClientIP(request), currentUser);
 
-        // 📊 MÉTRICAS + evento de segurança
+        // MÉTRICAS + evento de segurança
         metricsCollector.recordError("ACCESS_DENIED", "403", request.getRequestURI());
         metricsCollector.recordSecurityEvent("access_denied", currentUser, request.getRequestURI());
         metricsCollector.recordDuration(sample, "access_denied");
 
-        // 🚨 ALERTAS por threshold
+        // ALERTAS por threshold
         alertService.processError("ACCESS_DENIED", errorId, request.getRequestURI(),
                 ex.getMessage(), currentUser);
 
@@ -284,7 +285,7 @@ public class GlobalExceptionHandler {
         log.warn("Erro de validação - ID: {} - Path: {} - IP: {} - Violações: {}",
                 errorId, request.getRequestURI(), getClientIP(request), violations);
 
-        // 📊 MÉTRICAS (validação não gera alertas)
+        // MÉTRICAS (validação não gera alertas)
         metricsCollector.recordError("VALIDATION_ERROR", "400", request.getRequestURI());
         metricsCollector.recordDuration(sample, "validation_error");
 
@@ -308,7 +309,7 @@ public class GlobalExceptionHandler {
         log.warn("Parâmetro obrigatório ausente - ID: {} - Path: {} - IP: {} - Parâmetro: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getParameterName());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("MISSING_PARAMETER", "400", request.getRequestURI());
         metricsCollector.recordDuration(sample, "missing_parameter");
 
@@ -332,7 +333,7 @@ public class GlobalExceptionHandler {
         log.warn("Tipo de parâmetro inválido - ID: {} - Path: {} - IP: {} - Parâmetro: {} - Valor: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getName(), ex.getValue());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("INVALID_PARAMETER_TYPE", "400", request.getRequestURI());
         metricsCollector.recordDuration(sample, "invalid_parameter_type");
 
@@ -356,7 +357,7 @@ public class GlobalExceptionHandler {
         log.warn("Upload muito grande - ID: {} - Path: {} - IP: {} - Tamanho máximo: {}",
                 errorId, request.getRequestURI(), getClientIP(request), ex.getMaxUploadSize());
 
-        // 📊 MÉTRICAS
+        // MÉTRICAS
         metricsCollector.recordError("FILE_TOO_LARGE", "400", request.getRequestURI());
         metricsCollector.recordDuration(sample, "file_too_large");
 
@@ -372,6 +373,50 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(FileNotSupportedException.class)
+    public ResponseEntity<RestErrorMessage> handleFileNotSupported(FileNotSupportedException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Tipo de arquivo não permitido - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
+
+        metricsCollector.recordError("FILE_NOT_SUPPORTED", "415", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "file_not_supported");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
+    }
+
+    @ExceptionHandler(ImageExceedsMaxSizeException.class)
+    public ResponseEntity<RestErrorMessage> handleImageExceedsMaxSize(ImageExceedsMaxSizeException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Arquivo de imagem muito grande - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
+
+        metricsCollector.recordError("IMAGE_TOO_LARGE", "413", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "image_too_large");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
+    }
+
     // ================================================================================================
     // HANDLER GENÉRICO - ÚLTIMO RECURSO (CRÍTICO) - MÉTRICAS + ALERTA IMEDIATO
     // ================================================================================================
@@ -383,22 +428,22 @@ public class GlobalExceptionHandler {
         String currentUser = getCurrentUsername();
         String clientIP = getClientIP(request);
 
-        // ✅ LOG COMPLETO para debugging (só no servidor)
+        // LOG COMPLETO para debugging (só no servidor)
         log.error("ERRO INTERNO NÃO TRATADO - ID: {} - Path: {} - IP: {} - User: {} - Classe: {} - Mensagem: {}",
                 errorId, request.getRequestURI(), clientIP, currentUser,
                 ex.getClass().getSimpleName(), ex.getMessage(), ex);
 
-        // 📊 MÉTRICAS CRÍTICAS
+        // MÉTRICAS CRÍTICAS
         metricsCollector.recordError("INTERNAL_ERROR", "500", request.getRequestURI());
         metricsCollector.recordCriticalError("INTERNAL_ERROR", "unhandled_exception");
         metricsCollector.recordUserError(getUserRole(currentUser), "INTERNAL_ERROR");
         metricsCollector.recordDuration(sample, "internal_error");
 
-        // 🚨 ALERTA CRÍTICO IMEDIATO
+        // ALERTA CRÍTICO IMEDIATO
         alertService.processError("INTERNAL_ERROR", errorId, request.getRequestURI(),
                 ex.getMessage(), currentUser);
 
-        // ✅ RESPOSTA SEGURA (sem vazamento de informações)
+        // RESPOSTA SEGURA (sem vazamento de informações)
         RestErrorMessage error = RestErrorMessage.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .code("INTERNAL_ERROR")

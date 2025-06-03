@@ -1,4 +1,12 @@
 package com.ftc.containerView.model.auth;
 
-public record LoginDTO(String cpf, String password) {
+import jakarta.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.br.CPF;
+
+public record LoginDTO(
+        @CPF
+        String cpf,
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*#?&]{8,}$",
+                message = "Senha deve ter pelo menos 8 caracteres, 1 letra e 1 número")
+        String password) {
 }

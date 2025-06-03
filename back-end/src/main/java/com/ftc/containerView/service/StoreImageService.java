@@ -16,11 +16,13 @@ import java.util.List;
 public class StoreImageService {
 
     private static final Logger logger = LoggerFactory.getLogger(StoreImageService.class);
+    private final ImageValidationService imageValidationService;
 
     private final S3Service s3Service;
 
     @Autowired
-    public StoreImageService(S3Service s3Service) {
+    public StoreImageService(ImageValidationService imageValidationService, S3Service s3Service) {
+        this.imageValidationService = imageValidationService;
         this.s3Service = s3Service;
     }
 
@@ -31,6 +33,8 @@ public class StoreImageService {
 
         for (MultipartFile image : images) {
             String fileName = "image_" + imageCount++ + "_" + containerId + ".jpg";
+
+            imageValidationService.validateImage(image);
 
             try {
                 imageKeys.add(s3Service.uploadFile(image.getBytes(), fileName, "application/jpg"));

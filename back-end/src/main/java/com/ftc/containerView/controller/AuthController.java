@@ -12,6 +12,7 @@ import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
 import com.ftc.containerView.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public class AuthController {
     private final TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login (@RequestBody LoginDTO login, HttpServletRequest request) {
+    public ResponseEntity login (@Valid @RequestBody LoginDTO login, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/login - Tentando autenticar usuário com CPF: {}. IP: {}", login.cpf(), request.getRemoteAddr());
         User user = userRepository.findByCpf(login.cpf())
@@ -63,7 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<TwoFAResponseDTO> verify(@RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
+    public ResponseEntity<TwoFAResponseDTO> verify(@Valid @RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/verify - Verificando código 2FA para token temporário. IP: {}", request.getRemoteAddr());
         String userCpf = tempTokenService.validateTempToken(verifyCodeDTO.tempToken());
@@ -85,7 +86,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity register (@RequestBody UserDTO register, HttpServletRequest request) {
+    public ResponseEntity register (@Valid @RequestBody UserDTO register, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/register - Tentando registrar usuário com CPF: {}. IP: {}", register.cpf(), request.getRemoteAddr());
         Optional<User> user = userRepository.findByCpf(register.cpf());
