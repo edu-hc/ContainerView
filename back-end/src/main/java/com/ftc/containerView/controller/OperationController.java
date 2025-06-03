@@ -1,5 +1,6 @@
 package com.ftc.containerView.controller;
 
+import com.ftc.containerView.infra.security.auth.UserContextService;
 import com.ftc.containerView.model.operation.OperationDTO;
 import com.ftc.containerView.model.operation.Operation;
 import com.ftc.containerView.service.OperationService;
@@ -24,13 +25,15 @@ public class OperationController {
 
     private final OperationService operationService;
     private final StoreImageService storeImageService;
+    private final UserContextService userContextService;
     private static final Logger logger = LoggerFactory.getLogger(OperationController.class);
 
 
     @Autowired
-    public OperationController(OperationService operationService, StoreImageService storeImageService) {
+    public OperationController(OperationService operationService, StoreImageService storeImageService, UserContextService userContextService) {
         this.operationService = operationService;
         this.storeImageService = storeImageService;
+        this.userContextService = userContextService;
         logger.info("OperationController inicializado com sucesso");
     }
 
@@ -66,9 +69,10 @@ public class OperationController {
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<Operation> createOperation(@RequestParam("containerId") String containerId,
                                                      @RequestParam("containerDescription") String containerDescription,
-                                                     @RequestParam("userId") Long userId,
                                                      @RequestParam(value = "images", required = false) MultipartFile[] imageFiles,
                                                      HttpServletRequest request) throws IOException {
+
+        Long userId = userContextService.getCurrentUserId();
 
         logger.info("POST /operations - Criando nova operação. ContainerId: {}, UserId: {}, IP: {}",
                 containerId, userId, request.getRemoteAddr());
