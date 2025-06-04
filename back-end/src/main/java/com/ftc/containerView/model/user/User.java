@@ -37,6 +37,7 @@ public class User {
     private String password;
 
     @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
     private UserRole role; // Ex: "USER", "ADMIN"
 
     @Column(name = "two_factor_enabled", nullable = false)
