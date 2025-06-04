@@ -16,7 +16,7 @@ public record UserDTO(
         @Email(message = "Email inválido")
         @NotBlank(message = "Email é obrigatório")
         String email,
-        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*#?&]{8,}$",
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*#?&]{8,100}$",
                 message = "Senha deve ter pelo menos 8 caracteres, 1 letra e 1 número")
         String password,
         @NotNull(message = "Função é obrigatória")
