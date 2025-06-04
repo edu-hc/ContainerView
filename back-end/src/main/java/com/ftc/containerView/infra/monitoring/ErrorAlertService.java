@@ -118,7 +118,7 @@ public class ErrorAlertService {
         }
 
         sendAlert(
-                "🧪 TESTE DE ALERTA - " + applicationName,
+                "TESTE DE ALERTA - " + applicationName,
                 buildTestAlertMessage(),
                 AlertType.TEST
         );
@@ -139,7 +139,7 @@ public class ErrorAlertService {
         // Cooldown para evitar spam de alertas críticos
         if (now - lastAlert > criticalCooldownMinutes * 60 * 1000) {
             sendAlert(
-                    "🔥 ERRO CRÍTICO - " + applicationName,
+                    "ERRO CRÍTICO - " + applicationName,
                     buildCriticalAlertMessage(errorCode, errorId, path, details, userInfo),
                     AlertType.CRITICAL
             );
@@ -161,7 +161,7 @@ public class ErrorAlertService {
 
         if (now - lastAlert > (criticalCooldownMinutes * 2) * 60 * 1000) {
             sendAlert(
-                    "⚠️ ERRO DE ALTA SEVERIDADE - " + applicationName,
+                    "ERRO DE ALTA SEVERIDADE - " + applicationName,
                     buildHighSeverityAlertMessage(errorCode, errorId, path, details, userInfo),
                     AlertType.HIGH_SEVERITY
             );
@@ -180,7 +180,7 @@ public class ErrorAlertService {
 
             if (now - lastAlert > cooldownMinutes * 60 * 1000) {
                 sendAlert(
-                        "📊 THRESHOLD DE ERROS ATINGIDO - " + applicationName,
+                        "THRESHOLD DE ERROS ATINGIDO - " + applicationName,
                         buildThresholdAlertMessage(totalErrorCount.get(), errorCode, errorId, path),
                         AlertType.THRESHOLD
                 );
@@ -237,7 +237,7 @@ public class ErrorAlertService {
 
     private String buildCriticalAlertMessage(String errorCode, String errorId, String path, String details, String userInfo) {
         return String.format(
-                "🔥 ERRO CRÍTICO DETECTADO\n\n" +
+                "ERRO CRÍTICO DETECTADO\n\n" +
                         "Sistema: %s\n" +
                         "Timestamp: %s\n" +
                         "Severidade: CRÍTICA - AÇÃO IMEDIATA NECESSÁRIA\n\n" +
@@ -247,15 +247,15 @@ public class ErrorAlertService {
                         "├─ Endpoint: %s\n" +
                         "├─ Usuário: %s\n" +
                         "└─ Detalhes: %s\n\n" +
-                        "📋 AÇÕES RECOMENDADAS:\n" +
+                        "AÇÕES RECOMENDADAS:\n" +
                         "1. Verificar logs imediatamente\n" +
                         "2. Monitorar métricas de sistema\n" +
                         "3. Verificar conectividade com serviços externos\n\n" +
-                        "🔗 LINKS ÚTEIS:\n" +
+                        "LINKS ÚTEIS:\n" +
                         "• Logs: http://localhost:8080/actuator/loggers\n" +
                         "• Métricas: http://localhost:8080/actuator/metrics\n" +
                         "• Health: http://localhost:8080/actuator/health\n\n" +
-                        "⏰ Este alerta tem cooldown de %d minutos.",
+                        "Este alerta tem cooldown de %d minutos.",
                 applicationName,
                 getCurrentTimestamp(),
                 errorCode, errorId, path, maskUserInfo(userInfo), details,
@@ -265,7 +265,7 @@ public class ErrorAlertService {
 
     private String buildHighSeverityAlertMessage(String errorCode, String errorId, String path, String details, String userInfo) {
         return String.format(
-                "⚠️ ERRO DE ALTA SEVERIDADE\n\n" +
+                "ERRO DE ALTA SEVERIDADE\n\n" +
                         "Sistema: %s\n" +
                         "Timestamp: %s\n\n" +
                         "Detalhes:\n" +
@@ -283,7 +283,7 @@ public class ErrorAlertService {
 
     private String buildThresholdAlertMessage(int errorCount, String lastErrorCode, String lastErrorId, String lastPath) {
         return String.format(
-                "📊 THRESHOLD DE ERROS ATINGIDO\n\n" +
+                "THRESHOLD DE ERROS ATINGIDO\n\n" +
                         "Sistema: %s\n" +
                         "Timestamp: %s\n\n" +
                         "Estatísticas:\n" +
@@ -306,7 +306,7 @@ public class ErrorAlertService {
 
     private String buildTestAlertMessage() {
         return String.format(
-                "🧪 TESTE DE ALERTA\n\n" +
+                "TESTE DE ALERTA\n\n" +
                         "Sistema: %s\n" +
                         "Timestamp: %s\n\n" +
                         "Este é um alerta de teste para verificar se o sistema de monitoramento está funcionando corretamente.\n\n" +
@@ -316,7 +316,7 @@ public class ErrorAlertService {
                         "├─ Cooldown: %d minutos\n" +
                         "├─ Alertas habilitados: %s\n" +
                         "└─ Total de erros desde o último reset: %d\n\n" +
-                        "Se você recebeu este email, o sistema de alertas está funcionando! ✅",
+                        "Se você recebeu este email, o sistema de alertas está funcionando!",
                 applicationName, getCurrentTimestamp(),
                 alertEmail, errorThreshold, cooldownMinutes, alertsEnabled, totalErrorCount.get()
         );
