@@ -11,7 +11,7 @@ public record UserDTO(
         @NotBlank(message = "Sobrenome é obrigatório")
         @Size(min = 2, max = 50, message = "Sobrenome deve ter entre 2 e 50 caracteres")
         String lastName,
-        @CPF(message = "CPF inválido")
+        //@CPF(message = "CPF inválido")
         String cpf,
         @Email(message = "Email inválido")
         @NotBlank(message = "Email é obrigatório")
