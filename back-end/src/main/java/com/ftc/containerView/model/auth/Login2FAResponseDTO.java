@@ -1,7 +1,7 @@
 package com.ftc.containerView.model.auth;
 
-public record LoginResponseDTO(
+public record Login2FAResponseDTO(
         String cpf,
         boolean requiresTwoFactor,
-        String token
+        String temporaryToken
 ) {}

@@ -4,10 +4,7 @@ import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundExceptio
 import com.ftc.containerView.infra.security.auth.TempTokenService;
 import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.infra.security.auth.email.EmailService;
-import com.ftc.containerView.model.auth.LoginDTO;
-import com.ftc.containerView.model.auth.LoginResponseDTO;
-import com.ftc.containerView.model.auth.TwoFAResponseDTO;
-import com.ftc.containerView.model.auth.VerifyCodeDTO;
+import com.ftc.containerView.model.auth.*;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
 import com.ftc.containerView.repositories.UserRepository;
@@ -52,7 +49,7 @@ public class AuthController {
                 emailService.sendVerificationCode(user);
                 long execTime = System.currentTimeMillis() - startTime;
                 logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
-                return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
+                return ResponseEntity.ok(new Login2FAResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
             }
             String token = tokenService.generateToken(user);
             long execTime = System.currentTimeMillis() - startTime;
