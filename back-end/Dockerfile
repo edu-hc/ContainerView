@@ -1,20 +1,15 @@
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
 
-# Instalar curl
+# Instalar apenas curl
 RUN yum update -y && \
     yum install -y curl --allowerasing && \
     yum clean all
-
-# Criar usuário (useradd já disponível na imagem completa)
-RUN useradd -r -s /bin/false containerapp
 
 WORKDIR /app
 
 # Copiar JAR já compilado
 COPY target/containerView-*.jar app.jar
-RUN chown containerapp:containerapp app.jar
 
-USER containerapp
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
