@@ -1,8 +1,10 @@
 # Usar apenas runtime - Maven roda no CodeBuild
 FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
 
-# Instalar curl
-RUN yum update -y && yum install -y curl && yum clean all
+# Resolver conflito curl-minimal e instalar curl
+RUN yum update -y && \
+    yum install -y curl --allowerasing && \
+    yum clean all
 
 # Criar usuário
 RUN adduser containerapp
