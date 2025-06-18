@@ -21,8 +21,12 @@ phases:
       - echo "Checking JAR file..."
       - ls -la target/
 
-      - echo "Moving back to root for Docker build..."
+      - echo "Copying JAR to root context..."
+      - cp target/containerView-*.jar ../containerView.jar
       - cd ..
+
+      - echo "Verifying JAR in root..."
+      - ls -la containerView.jar
 
       - echo "Building Docker image..."
       - docker build -t $ImageName .
