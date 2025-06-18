@@ -1,0 +1,40 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Build started on `date`
+      - echo Logging in to Docker...
+
+  build:
+    commands:
+      - echo Building the application...
+      - cd back-end
+      - chmod +x ./mvnw
+
+      # Build da aplicação Java
+      - ./mvnw clean package -DskipTests
+
+      # Build da imagem Docker
+      - echo Building Docker image...
+      - docker build -t containerapp:$CODEBUILD_BUILD_NUMBER .
+      - docker tag containerapp:$CODEBUILD_BUILD_NUMBER containerapp:latest
+
+      # Verificar se imagem foi criada
+      - docker images
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Preparing artifacts...
+
+artifacts:
+  files:
+    - back-end/Dockerrun.aws.json
+    - back-end/target/containerView-*.jar
+  name: containerapp-$(date +%Y-%m-%d-%H-%M-%S)
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
+    - '/var/lib/docker/**/*'
