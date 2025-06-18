@@ -22,7 +22,7 @@ phases:
       - ls -la target/
 
       - echo "Building Docker image from back-end directory..."
-      - docker build -t $ImageName .
+      - docker build -t $ImageName -f Dockerfile .
 
   post_build:
     commands:
