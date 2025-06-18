@@ -13,20 +13,24 @@ phases:
 
   build:
     commands:
+      - echo "Building Maven project..."
       - cd back-end
-
-      # Maven build no CodeBuild (sem Docker)
       - chmod +x mvnw
       - ./mvnw clean package -DskipTests
 
-      # Docker build apenas com runtime
-      - echo "Building Docker image with pre-compiled JAR..."
-      - docker build -t containerapp:$CODEBUILD_BUILD_NUMBER .
-      - docker tag containerapp:$CODEBUILD_BUILD_NUMBER containerapp:latest
+      - echo "Checking JAR file..."
+      - ls -la target/
+
+      - echo "Moving back to root for Docker build..."
+      - cd ..
+
+      - echo "Building Docker image..."
+      - docker build -t $ImageName -f ./back-end/Dockerfile .
 
   post_build:
     commands:
       - echo Build completed on `date`
+      - echo "Docker images:"
       - docker images
 
 artifacts:
@@ -34,7 +38,3 @@ artifacts:
     - back-end/Dockerrun.aws.json
     - back-end/target/containerView-*.jar
   name: containerapp-artifacts
-
-cache:
-  paths:
-    - '/root/.m2/**/*'
