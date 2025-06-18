@@ -5,47 +5,17 @@ phases:
     runtime-versions:
       java: corretto17
 
-  pre_build:
-    commands:
-      - echo Build started on `date`
-      - java -version
-      - mvn --version
-
   build:
     commands:
-      - echo "Building Maven project..."
-      - cd back-end
-      - chmod +x mvnw
-      - ./mvnw clean package -DskipTests
-
-      - echo "Checking JAR file..."
-      - ls -la target/
-
-      - echo "Copying JAR to root context..."
-      - ls -la target/
-      - cp target/containerView-*.jar ../containerView.jar
-      - cd ..
-
-      - echo "Verifying JAR in root..."
-      - ls -la
-      - ls -la containerView.jar
-
-      - echo "Creating .dockerignore..."
-      - echo "src/" > .dockerignore
-      - echo ".git/" >> .dockerignore
-      - echo "*.md" >> .dockerignore
-
-      - echo "Building Docker image..."
+      - echo "Building Docker image with multi-stage build..."
       - docker build -t $ImageName .
 
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo "Docker images:"
       - docker images
 
 artifacts:
   files:
     - back-end/Dockerrun.aws.json
-    - back-end/target/containerView-*.jar
   name: containerapp-artifacts

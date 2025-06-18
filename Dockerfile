@@ -1,14 +1,39 @@
+# ================================================================================================
+# DOCKERFILE MULTI-STAGE - SOLUÇÃO GARANTIDA
+# ================================================================================================
+
+# Stage 1: Build Maven
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-alpine-jdk AS builder
+
+WORKDIR /build
+
+# Copiar arquivos Maven
+COPY back-end/pom.xml .
+COPY back-end/.mvn .mvn/
+COPY back-end/mvnw .
+
+# Download dependências (cache layer)
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+
+# Copiar código fonte
+COPY back-end/src/ src/
+
+# Build do projeto
+RUN ./mvnw clean package -DskipTests -B
+
+# Verificar se JAR foi criado
+RUN ls -la target/ && test -f target/containerView-*.jar
+
+# Stage 2: Runtime
 FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
 
-# Instalar curl
-RUN yum update -y && \
-    yum install -y curl --allowerasing && \
-    yum clean all
+# Instalar curl para health check
+RUN yum update -y && yum install -y curl && yum clean all
 
 WORKDIR /app
 
-# Copiar JAR copiado para a raiz
-COPY containerView.jar app.jar
+# Copiar JAR do stage anterior
+COPY --from=builder /build/target/containerView-*.jar app.jar
 
 EXPOSE 8080
 
