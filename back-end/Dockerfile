@@ -1,11 +1,11 @@
-FROM maven:3.9.9-amazoncorretto-21 AS build
+FROM maven:3.9.9-amazoncorretto-17 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 RUN apk add --no-cache curl
 RUN adduser --system --group containerapp
 WORKDIR /app
