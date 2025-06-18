@@ -22,11 +22,18 @@ phases:
       - ls -la target/
 
       - echo "Copying JAR to root context..."
+      - ls -la target/
       - cp target/containerView-*.jar ../containerView.jar
       - cd ..
 
       - echo "Verifying JAR in root..."
+      - ls -la
       - ls -la containerView.jar
+
+      - echo "Creating .dockerignore..."
+      - echo "src/" > .dockerignore
+      - echo ".git/" >> .dockerignore
+      - echo "*.md" >> .dockerignore
 
       - echo "Building Docker image..."
       - docker build -t $ImageName .
