@@ -1,11 +1,11 @@
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023
 
-# Instalar curl resolvendo conflitos
+# Instalar curl
 RUN yum update -y && \
     yum install -y curl --allowerasing && \
     yum clean all
 
-# Criar usuário (Amazon Linux usa useradd, não adduser)
+# Criar usuário (useradd já disponível na imagem completa)
 RUN useradd -r -s /bin/false containerapp
 
 WORKDIR /app
