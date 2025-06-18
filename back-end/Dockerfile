@@ -7,7 +7,7 @@ RUN yum update -y && \
 
 WORKDIR /app
 
-# Copiar JAR (agora o contexto é back-end/)
+# Copiar JAR do diretório target (contexto = back-end/)
 COPY target/containerView-*.jar app.jar
 
 EXPOSE 8080
