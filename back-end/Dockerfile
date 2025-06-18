@@ -1,16 +1,18 @@
-FROM maven:3.9.9-amazoncorretto-17 AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Usar apenas runtime - Maven roda no CodeBuild
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
 
-FROM eclipse-temurin:17-jre-alpine
-RUN apk add --no-cache curl
-RUN adduser --system --group containerapp
+# Instalar curl
+RUN yum update -y && yum install -y curl && yum clean all
+
+# Criar usuário
+RUN adduser containerapp
+
 WORKDIR /app
-COPY --from=build /app/target/containerView-*.jar app.jar
+
+# Copiar JAR já compilado
+COPY target/containerView-*.jar app.jar
 RUN chown containerapp:containerapp app.jar
+
 USER containerapp
 EXPOSE 8080
 

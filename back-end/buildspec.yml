@@ -1,40 +1,40 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      java: corretto17
+
   pre_build:
     commands:
       - echo Build started on `date`
-      - echo Logging in to Docker...
+      - java -version
+      - mvn --version
 
   build:
     commands:
-      - echo Building the application...
       - cd back-end
-      - chmod +x ./mvnw
 
-      # Build da aplicação Java
+      # Maven build no CodeBuild (sem Docker)
+      - chmod +x mvnw
       - ./mvnw clean package -DskipTests
 
-      # Build da imagem Docker
-      - echo Building Docker image...
+      # Docker build apenas com runtime
+      - echo "Building Docker image with pre-compiled JAR..."
       - docker build -t containerapp:$CODEBUILD_BUILD_NUMBER .
       - docker tag containerapp:$CODEBUILD_BUILD_NUMBER containerapp:latest
-
-      # Verificar se imagem foi criada
-      - docker images
 
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Preparing artifacts...
+      - docker images
 
 artifacts:
   files:
     - back-end/Dockerrun.aws.json
     - back-end/target/containerView-*.jar
-  name: containerapp-$(date +%Y-%m-%d-%H-%M-%S)
+  name: containerapp-artifacts
 
 cache:
   paths:
     - '/root/.m2/**/*'
-    - '/var/lib/docker/**/*'
