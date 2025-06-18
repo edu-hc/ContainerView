@@ -3,7 +3,10 @@
 # ================================================================================================
 
 # Stage 1: Build Maven
-FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-alpine-jdk AS builder
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023 AS builder
+
+# Instalar Maven se necessário (Amazon Linux já tem)
+RUN yum update -y && yum install -y maven && yum clean all
 
 WORKDIR /build
 
