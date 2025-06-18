@@ -21,11 +21,8 @@ phases:
       - echo "Checking JAR file..."
       - ls -la target/
 
-      - echo "Moving back to root for Docker build..."
-      - cd ..
-
-      - echo "Building Docker image..."
-      - docker build -t $ImageName -f ./back-end/Dockerfile .
+      - echo "Building Docker image from back-end directory..."
+      - docker build -t $ImageName .
 
   post_build:
     commands:

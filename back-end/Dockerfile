@@ -1,14 +1,14 @@
 FROM public.ecr.aws/amazoncorretto/amazoncorretto:17-al2023-headless
 
-# Instalar apenas curl
+# Instalar curl
 RUN yum update -y && \
     yum install -y curl --allowerasing && \
     yum clean all
 
 WORKDIR /app
 
-# Copiar JAR já compilado
-COPY back-end/target/containerView-*.jar app.jar
+# Copiar JAR (agora o contexto é back-end/)
+COPY target/containerView-*.jar app.jar
 
 EXPOSE 8080
 
