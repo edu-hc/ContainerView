@@ -21,8 +21,11 @@ phases:
       - echo "Checking JAR file..."
       - ls -la target/
 
+      - echo "Moving back to root for Docker build..."
+      - cd ..
+
       - echo "Building Docker image..."
-      - docker build -t $ImageName -f Dockerfile .
+      - docker build -t $ImageName .
 
   post_build:
     commands:
@@ -32,6 +35,6 @@ phases:
 
 artifacts:
   files:
-    - Dockerrun.aws.json
-    - target/containerView-*.jar
+    - back-end/Dockerrun.aws.json
+    - back-end/target/containerView-*.jar
   name: containerapp-artifacts
