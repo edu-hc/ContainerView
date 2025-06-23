@@ -26,7 +26,7 @@ services:
     build: .
     container_name: containerView-app
     ports:
-      - "8080:8080"
+      - "5000:5000"
     environment:
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}

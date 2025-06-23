@@ -11,8 +11,8 @@ import java.util.List;
 @Table(name = "containers")
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Builder
+@Data
 @EqualsAndHashCode(of = "id")
 public class Container {
 

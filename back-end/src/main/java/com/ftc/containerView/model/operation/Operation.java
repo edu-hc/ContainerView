@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "operations")
-@Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@Data
 @EqualsAndHashCode(of = "id")
 public class Operation {
 

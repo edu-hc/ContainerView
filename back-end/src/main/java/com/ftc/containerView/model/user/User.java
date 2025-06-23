@@ -12,8 +12,8 @@ import java.util.List;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
+@Builder
+@Data
 @EqualsAndHashCode(of = "id")
 public class User {
 
