@@ -39,6 +39,7 @@ jobs:
       run: |
         cd back-end
         chmod +x mvnw
+        ./mvnw clean
         ./mvnw clean test -Dspring.profiles.active=test
 
   # Job 2: Build e Deploy (só executa se testes passarem)
