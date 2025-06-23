@@ -71,11 +71,10 @@ jobs:
         mkdir -p deploy/.ebextensions
         cat > deploy/.ebextensions/java.config << 'EOF'
         option_settings:
-          aws:elasticbeanstalk:container:java:
-            JVMOptions: '-Xmx512m'
           aws:elasticbeanstalk:application:environment:
             SPRING_PROFILES_ACTIVE: production
             SERVER_PORT: 5000
+            JAVA_OPTS: -Xmx512m
         EOF
 
     - name: 📦 Zip deployment package
