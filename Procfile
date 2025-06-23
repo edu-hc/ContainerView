@@ -1,1 +1,1 @@
-web: java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+UseG1GC -Dserver.port=5000 -Dspring.profiles.active=production -jar target/containerView-*.jar
+web: java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+UseG1GC -Dserver.port=5000 -Dspring.profiles.active=production -jar containerView-*.jar
