@@ -88,7 +88,7 @@ jobs:
         aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: ContainerView
-        environment_name: ContainerView-env
+        environment_name: ContainerView-prod
         version_label: v${{ github.run_number }}
         region: ${{ env.AWS_REGION }}
         deployment_package: back-end/deploy.zip
