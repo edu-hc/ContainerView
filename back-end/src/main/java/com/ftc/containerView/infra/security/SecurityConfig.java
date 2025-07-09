@@ -33,11 +33,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/verify").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/verify").hasRole("TEMPORARY")
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/operations").hasRole("INSPETOR")
                         .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().hasRole("INSPETOR")
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

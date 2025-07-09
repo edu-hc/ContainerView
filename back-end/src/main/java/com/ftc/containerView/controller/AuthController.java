@@ -3,6 +3,7 @@ package com.ftc.containerView.controller;
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.infra.security.auth.TempTokenService;
 import com.ftc.containerView.infra.security.auth.TokenService;
+import com.ftc.containerView.infra.security.auth.UserContextService;
 import com.ftc.containerView.infra.security.auth.email.EmailService;
 import com.ftc.containerView.model.auth.*;
 import com.ftc.containerView.model.user.User;
@@ -34,6 +35,7 @@ public class AuthController {
     private final TempTokenService tempTokenService;
     private final EmailService emailService;
     private final TokenService tokenService;
+    private final UserContextService userContextService;
 
     @PostMapping("/login")
     public ResponseEntity login (@Valid @RequestBody LoginDTO login, HttpServletRequest request) {
@@ -64,7 +66,7 @@ public class AuthController {
     public ResponseEntity<TwoFAResponseDTO> verify(@Valid @RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/verify - Verificando código 2FA para token temporário. IP: {}", request.getRemoteAddr());
-        String userCpf = tempTokenService.validateTempToken(verifyCodeDTO.tempToken());
+        String userCpf = userContextService.getCurrentUser().getCpf();
         if (userCpf.isEmpty()) {
             logger.warn("Token temporário inválido na verificação 2FA");
             return ResponseEntity.badRequest().build();

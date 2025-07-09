@@ -1,5 +1,6 @@
 package com.ftc.containerView.infra.security;
 
+import com.ftc.containerView.infra.security.auth.TempTokenService;
 import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserRole;
@@ -36,6 +37,9 @@ public class SecurityFilter extends OncePerRequestFilter {
     private TokenService tokenService;
 
     @Autowired
+    private TempTokenService tempTokenService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Override
@@ -47,6 +51,20 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (token != null && !token.isEmpty()) {
             try {
                 logger.debug("Token recebido: {}", token);
+
+                var tempAuthCpf = tempTokenService.validateTempToken(token);
+                if (tempAuthCpf != null && !tempAuthCpf.isEmpty()) {
+                    logger.info("Usuário autenticado via token temporário: {}", tempAuthCpf);
+                    var authorities = List.of(new SimpleGrantedAuthority("ROLE_TEMPORARY"));
+                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            tempAuthCpf, "", authorities
+                    );
+                    var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 // Obter CPF do token
                 var cpf = tokenService.validateToken(token);
 
