@@ -8,6 +8,7 @@ import com.ftc.containerView.infra.security.auth.email.EmailService;
 import com.ftc.containerView.model.auth.*;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
+import com.ftc.containerView.model.user.UserMeDTO;
 import com.ftc.containerView.repositories.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -104,5 +102,18 @@ public class AuthController {
         }
         logger.warn("Tentativa de registro para CPF já existente: {}", register.cpf());
         return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDTO> me() {
+
+        UserMeDTO user = new UserMeDTO(userContextService.getCurrentUser().getId(),
+                userContextService.getCurrentUser().getCpf(),
+                userContextService.getCurrentUser().getFirstName(),
+                userContextService.getCurrentUser().getLastName(),
+                userContextService.getCurrentUser().getEmail(),
+                userContextService.getCurrentUser().getRole(),
+                userContextService.getCurrentUser().isTwoFactorEnabled());
+        return ResponseEntity.ok(user);
     }
 }
