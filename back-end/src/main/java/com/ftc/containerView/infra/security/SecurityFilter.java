@@ -116,7 +116,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private static final Map<UserRole, List<String>> ROLE_PERMISSIONS = Map.of(
+    public static final Map<UserRole, List<String>> ROLE_PERMISSIONS = Map.of(
             UserRole.ADMIN, List.of("ROLE_ADMIN", "ROLE_GERENTE", "ROLE_INSPETOR"),
             UserRole.GERENTE, List.of("ROLE_GERENTE", "ROLE_INSPETOR"),
             UserRole.INSPETOR, List.of("ROLE_INSPETOR")
