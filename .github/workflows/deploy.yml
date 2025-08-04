@@ -72,7 +72,7 @@ jobs:
         aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         application_name: ContainerView
         environment_name: ContainerView-prod
-        version_label: v${{ github.run_number }}
+        version_label: v${{ github.run_number }}-${{ github.sha }}
         region: ${{ env.AWS_REGION }}
         deployment_package: back-end/deploy.zip
         wait_for_deployment: true
