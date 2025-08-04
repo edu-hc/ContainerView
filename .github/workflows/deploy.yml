@@ -14,22 +14,22 @@ jobs:
     name: 🧪 Test Application
     runs-on: ubuntu-latest
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-    - name: ☕ Setup Java 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'corretto'
-        cache: maven
+      - name: ☕ Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
 
-    - name: 🧪 Run tests
-      run: |
-        cd back-end
-        chmod +x mvnw
-        ./mvnw clean
-        ./mvnw clean test -Dspring.profiles.active=test
+      - name: 🧪 Run tests
+        run: |
+          cd back-end
+          chmod +x mvnw
+          ./mvnw clean
+          ./mvnw clean test -Dspring.profiles.active=test
 
   deploy:
     name: 🚀 Build and Deploy
@@ -37,56 +37,73 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-    - name: ☕ Setup Java 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'corretto'
-        cache: maven
+      - name: ☕ Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
 
-    - name: 🏗️ Build application
-      run: |
-        cd back-end
-        chmod +x mvnw
-        ./mvnw clean package -DskipTests
+      - name: 🏗️ Build application
+        run: |
+          cd back-end
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+          ls -la target/
+          echo "✅ Build completed successfully!"
 
-    - name: 🔧 Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: 📦 Zip deployment package
-      run: |
-        cd back-end
-        zip -r deploy.zip target/containerView-*.jar .platform
+      - name: 📦 Prepare deployment package
+        run: |
+          cd back-end
+          mkdir -p deploy
+          cp target/containerView-*.jar deploy/application.jar
+          echo "web: java -jar application.jar" > deploy/Procfile
+          mkdir -p deploy/.ebextensions
+          cat > deploy/.ebextensions/java.config << 'EOF'
+          option_settings:
+            aws:elasticbeanstalk:application:environment:
+              SPRING_PROFILES_ACTIVE: production
+              SERVER_PORT: 5000
+              JAVA_OPTS: -Xmx512m
+          EOF
 
-    - name: 🚀 Deploy to Elastic Beanstalk
-      uses: einaregilsson/beanstalk-deploy@v22
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: ContainerView
-        environment_name: ContainerView-prod
-        version_label: v${{ github.run_number }}-${{ github.sha }}
-        region: ${{ env.AWS_REGION }}
-        deployment_package: back-end/deploy.zip
-        wait_for_deployment: true
-        wait_for_environment_recovery: 300
+      - name: 📦 Zip deployment package
+        run: |
+          cd back-end/deploy
+          zip -r ../deploy.zip .
 
-    - name: ✅ Deployment success
-      if: success()
-      run: |
-        echo "🎉 Deployment successful!"
-        echo "🌍 Application URL: http://ContainerView-prod.us-east-1.elasticbeanstalk.com"
-        echo "🏥 Health Check: http://ContainerView-prod.us-east-1.elasticbeanstalk.com/actuator/health"
+      - name: 🚀 Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ContainerView
+          environment_name: ContainerView-prod
+          version_label: v${{ github.run_number }}
+          region: ${{ env.AWS_REGION }}
+          deployment_package: back-end/deploy.zip
+          wait_for_deployment: true
+          wait_for_environment_recovery: 300
 
-    - name: ❌ Deployment failed
-      if: failure()
-      run: |
-        echo "💥 Deployment failed!"
-        echo "📋 Check AWS Elastic Beanstalk console for details"
+      - name: ✅ Deployment success
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "🌍 Application URL: http://ContainerView-prod.us-east-1.elasticbeanstalk.com"
+          echo "🏥 Health Check: http://ContainerView-prod.us-east-1.elasticbeanstalk.com/actuator/health"
+
+      - name: ❌ Deployment failed
+        if: failure()
+        run: |
+          echo "💥 Deployment failed!"
+          echo "📋 Check AWS Elastic Beanstalk console for details"
