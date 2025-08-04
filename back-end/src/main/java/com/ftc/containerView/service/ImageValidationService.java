@@ -11,7 +11,7 @@ import java.util.Set;
 @Service
 public class ImageValidationService {
     private static final Set<String> ALLOWED_TYPES = Set.of("image/jpeg", "image/png");
-    private static final long MAX_SIZE = 1_200_000; // 1.2MB como no RF003
+    private static final long MAX_SIZE = 5_200_000; // 5.2MB
 
     public void validateImage(MultipartFile file) {
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
