@@ -52,8 +52,6 @@ jobs:
         cd back-end
         chmod +x mvnw
         ./mvnw clean package -DskipTests
-        ls -la target/
-        echo "✅ Build completed successfully!"
 
     - name: 🔧 Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -62,25 +60,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    - name: 📦 Prepare deployment package
-      run: |
-        cd back-end
-        mkdir -p deploy
-        cp target/containerView-*.jar deploy/application.jar
-        echo "web: java -jar application.jar" > deploy/Procfile
-        mkdir -p deploy/.ebextensions
-        cat > deploy/.ebextensions/java.config << 'EOF'
-        option_settings:
-          aws:elasticbeanstalk:application:environment:
-            SPRING_PROFILES_ACTIVE: production
-            SERVER_PORT: 5000
-            JAVA_OPTS: -Xmx512m
-        EOF
-
     - name: 📦 Zip deployment package
       run: |
-        cd back-end/deploy
-        zip -r ../deploy.zip .
+        cd back-end
+        zip -r deploy.zip target/containerView-*.jar .platform
 
     - name: 🚀 Deploy to Elastic Beanstalk
       uses: einaregilsson/beanstalk-deploy@v22
