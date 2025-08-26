@@ -26,9 +26,10 @@ public class StoreImageService {
     private final S3Service s3Service;
 
     @Autowired
-    public StoreImageService(ImageValidationService imageValidationService, ContainerRepository containerRepository, S3Service s3Service) {
+    public StoreImageService(ImageValidationService imageValidationService, ContainerRepository containerRepository, ContainerImageRepository containerImageRepository, S3Service s3Service) {
         this.imageValidationService = imageValidationService;
         this.containerRepository = containerRepository;
+        this.containerImageRepository = containerImageRepository;
         this.s3Service = s3Service;
     }
 
