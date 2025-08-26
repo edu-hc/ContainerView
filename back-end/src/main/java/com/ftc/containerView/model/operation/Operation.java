@@ -5,6 +5,10 @@ import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "operations")
+@EntityListeners(AuditingEntityListener.class)
 @Builder
 @AllArgsConstructor
 @Data
@@ -66,11 +71,19 @@ public class Operation {
     @Enumerated(EnumType.STRING)
     private OperationStatus status;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @LastModifiedBy
+    @Column(name = "updated_by_cpf")
+    private String updatedByCpf;
+
     public Operation() {
-        createdAt = LocalDateTime.now();
     }
 
     public Operation(OperationDTO operationDTO, User user) {
@@ -85,6 +98,5 @@ public class Operation {
         this.refClient = operationDTO.refClient();
         this.loadDeadline = operationDTO.loadDeadline();
         this.user = user;
-        createdAt = LocalDateTime.now();
     }
 }
