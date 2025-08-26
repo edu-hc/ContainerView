@@ -30,7 +30,6 @@ public class Operation {
 
     @JsonIgnore
     @OneToMany(mappedBy = "operation", cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "container_id", unique = true, nullable = false)
     private List<Container> containers = new ArrayList<>(); //Container container;
 
     @ManyToOne

@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface OperationRepository extends JpaRepository<Operation, Long> {
 
     Optional<Operation> findById(Long id);
-    Optional<Operation> findByContainer(Container container);
+    Optional<Operation> findByContainers(Container container);
     List<Operation> findByUser(User user);
     List<Operation> findByCreatedAt(LocalDateTime createdAt);
     List<Operation> findByCreatedAtBefore(LocalDateTime createdAt);

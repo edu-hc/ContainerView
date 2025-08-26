@@ -85,7 +85,7 @@ public class ContainerController {
 
         containerService.validateMandatoryCategories(containerImages);
 
-        newContainer.setImages(containerImages);
+        newContainer.setContainerImages(containerImages);
         containerRepository.save(newContainer);
 
         long executionTime = System.currentTimeMillis() - startTime;
@@ -118,7 +118,7 @@ public class ContainerController {
     @GetMapping("/{id}/imagens")
     public ResponseEntity<List<String>> getContainerImages(@PathVariable String id) {
         Container container = containerService.getContainersByContainerId(id);
-        List<String> imageKeys = container.getImages().stream()
+        List<String> imageKeys = container.getContainerImages().stream()
                 .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
         List<String> imageUrls = new ArrayList<>();
         for (String key : imageKeys) {

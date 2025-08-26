@@ -1,6 +1,5 @@
 package com.ftc.containerView.service;
 
-import com.ftc.containerView.infra.errorhandling.exceptions.ContainerExistsException;
 import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.model.operation.OperationDTO;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,7 +61,7 @@ public class OperationService {
 
     }
 
-    public Optional<Operation> findOperationByContainer(Container container) {return operationRepository.findByContainer(container);}
+    public Optional<Operation> findOperationByContainer(Container container) {return operationRepository.findByContainers(container);}
 
     public List<Operation> findOperationByUser(User user) {return operationRepository.findByUser(user);}
 

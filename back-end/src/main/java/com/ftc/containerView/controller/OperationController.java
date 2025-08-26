@@ -66,6 +66,7 @@ public class OperationController {
 
     }
 
+    @PostMapping
     public ResponseEntity<Operation> createOperation(@RequestBody OperationDTO operationDTO,
                                                      HttpServletRequest request) throws IOException {
 
