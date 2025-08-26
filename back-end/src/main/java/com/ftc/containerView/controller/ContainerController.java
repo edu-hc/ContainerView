@@ -1,18 +1,27 @@
 package com.ftc.containerView.controller;
 
 import com.ftc.containerView.infra.aws.S3Service;
+import com.ftc.containerView.infra.security.auth.UserContextService;
 import com.ftc.containerView.model.container.Container;
+import com.ftc.containerView.model.container.CreateContainerDTO;
+import com.ftc.containerView.model.images.ContainerImage;
+import com.ftc.containerView.model.images.ContainerImageCategory;
+import com.ftc.containerView.repositories.ContainerRepository;
+import com.ftc.containerView.repositories.OperationRepository;
+import com.ftc.containerView.repositories.UserRepository;
 import com.ftc.containerView.service.ContainerService;
+import com.ftc.containerView.service.StoreImageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/containers")
@@ -20,12 +29,70 @@ public class ContainerController {
 
     private final ContainerService containerService;
     private final S3Service s3Service;
+    private final UserContextService userContextService;
+    private final StoreImageService storeImageService;
+    private final ContainerRepository containerRepository;
     private static final Logger logger = LoggerFactory.getLogger(ContainerController.class);
 
     @Autowired
-    public ContainerController(ContainerService containerService, S3Service s3Service) {
+    public ContainerController(ContainerService containerService, S3Service s3Service, UserContextService userContextService, UserRepository userRepository, OperationRepository operationRepository, StoreImageService storeImageService, ContainerRepository containerRepository) {
         this.containerService = containerService;
         this.s3Service = s3Service;
+        this.userContextService = userContextService;
+        this.storeImageService = storeImageService;
+        this.containerRepository = containerRepository;
+    }
+
+
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<Container> createContainer(@RequestParam("containerId") String containerId,
+                                                     @RequestParam("description") String description,
+                                                     @RequestParam("operationId") Long operationId,
+                                                     @RequestParam("sacksCount") int sacksCount,
+                                                     @RequestParam("tareTons") float tareTons,
+                                                     @RequestParam("liquidWeight") float liquidWeight,
+                                                     @RequestParam("grossWeight") float grossWeight,
+                                                     @RequestParam("agencySeal") String agencySeal,
+                                                     @RequestParam("otherSeals") List<String> otherSeals,
+
+                                                     @RequestParam(value = "vazioForrado", required = false) MultipartFile[] vazioForradoImages,
+                                                     @RequestParam(value = "fiada", required = false) MultipartFile[] fiadaImages,
+                                                     @RequestParam(value = "cheioAberto", required = false) MultipartFile[] cheioAbertoImages,
+                                                     @RequestParam(value = "meiaPorta", required = false) MultipartFile[] meiaPortaImages,
+                                                     @RequestParam(value = "lacradoFechado", required = false) MultipartFile[] lacradoFechadoImages,
+                                                     @RequestParam(value = "lacresPrincipal", required = false) MultipartFile[] lacresPrincipalImages,
+                                                     @RequestParam(value = "lacresOutros", required = false) MultipartFile[] lacresOutrosImages,
+
+
+                                                     HttpServletRequest request) {
+
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("POST /containers - Criando novo container. ContainerId: {}, UserId: {}, IP: {}",
+                containerId, userId, request.getRemoteAddr());
+
+
+        long startTime = System.currentTimeMillis();
+
+        CreateContainerDTO containerDTO = new CreateContainerDTO(containerId, description, new ArrayList<>(), userId, operationId,
+                sacksCount, tareTons, liquidWeight, grossWeight, agencySeal, otherSeals);
+
+        Container newContainer = containerService.createContainer(containerDTO);
+
+        List<ContainerImage> containerImages = new ArrayList<>();
+
+        containerImages.addAll(storeImageService.storeImages(vazioForradoImages, newContainer.getId(), ContainerImageCategory.VAZIO_FORRADO));
+
+        containerService.validateMandatoryCategories(containerImages);
+
+        newContainer.setImages(containerImages);
+        containerRepository.save(newContainer);
+
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("POST /containers concluído. Container criado com ID: {}. Tempo de resposta: {}ms",
+                newContainer.getId(), executionTime);
+
+        return ResponseEntity.status(201).body(newContainer);
     }
 
     @GetMapping
@@ -39,10 +106,10 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Container> getContainerById(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<Container> getContainerByContainerId(@PathVariable String id, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("GET /containers/{} - Buscando container por ID. IP: {}", id, request.getRemoteAddr());
-        Container container = containerService.getContainersById(id);
+        Container container = containerService.getContainersByContainerId(id);
         long execTime = System.currentTimeMillis() - startTime;
         logger.info("Container com ID {} encontrado. Tempo de resposta: {}ms", id, execTime);
         return ResponseEntity.ok(container);
@@ -50,8 +117,9 @@ public class ContainerController {
 
     @GetMapping("/{id}/imagens")
     public ResponseEntity<List<String>> getContainerImages(@PathVariable String id) {
-        Container container = containerService.getContainersById(id);
-        List<String> imageKeys = container.getImages();
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getImages().stream()
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
         List<String> imageUrls = new ArrayList<>();
         for (String key : imageKeys) {
             // 60 minutos de validade
@@ -60,13 +128,16 @@ public class ContainerController {
         return ResponseEntity.ok(imageUrls);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteContainer(@PathVariable String id, HttpServletRequest request) {
+    @DeleteMapping("/{containerId}")
+    public ResponseEntity<Void> deleteContainer(@PathVariable String containerId, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
-        logger.info("DELETE /containers/{} - Excluindo container. IP: {}", id, request.getRemoteAddr());
-        containerService.deleteContainer(id);
+        logger.info("DELETE /containers/{} - Excluindo container. IP: {}", containerId, request.getRemoteAddr());
+        containerService.deleteContainer(containerId);
         long execTime = System.currentTimeMillis() - startTime;
-        logger.info("Container com ID {} excluído com sucesso. Tempo de resposta: {}ms", id, execTime);
+        logger.info("Container com ID {} excluído com sucesso. Tempo de resposta: {}ms", containerId, execTime);
         return ResponseEntity.noContent().build();
     }
+
+
 }
+

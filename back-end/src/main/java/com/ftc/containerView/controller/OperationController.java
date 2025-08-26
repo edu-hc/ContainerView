@@ -66,40 +66,25 @@ public class OperationController {
 
     }
 
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<Operation> createOperation(@RequestParam("containerId") String containerId,
-                                                     @RequestParam("containerDescription") String containerDescription,
-                                                     @RequestParam(value = "images", required = false) MultipartFile[] imageFiles,
+    public ResponseEntity<Operation> createOperation(@RequestBody OperationDTO operationDTO,
                                                      HttpServletRequest request) throws IOException {
 
         Long userId = userContextService.getCurrentUserId();
 
-        logger.info("POST /operations - Criando nova operação. ContainerId: {}, UserId: {}, IP: {}",
-                containerId, userId, request.getRemoteAddr());
+        logger.info("POST /operations - Criando nova operação. UserId: {}, IP: {}",
+                userId, request.getRemoteAddr());
 
-        int imageCount = imageFiles != null ? imageFiles.length : 0;
-        logger.debug("Recebidos {} arquivos de imagem para o container {}", imageCount, containerId);
 
         long startTime = System.currentTimeMillis();
-         OperationDTO operation = new OperationDTO(
-                 containerId,
-                 containerDescription,
-                 new ArrayList<>(),
-                 userId);
 
-         if (imageFiles != null) {
-             logger.debug("Processando {} imagens para o container {}", imageFiles.length, containerId);
-             operation.containerImages().addAll(storeImageService.storeImages(imageFiles, operation.containerId()));
-             logger.debug("Imagens processadas com sucesso para o container {}", containerId);
-         }
 
-         Operation newOperation = operationService.createOperation(operation);
+        Operation newOperation = operationService.createOperation(operationDTO, userId);
 
-         long executionTime = System.currentTimeMillis() - startTime;
-         logger.info("POST /operations concluído. Operação criada com ID: {}. Tempo de resposta: {}ms",
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("POST /operations concluído. Operação criada com ID: {}. Tempo de resposta: {}ms",
                  newOperation.getId(), executionTime);
 
-         return new ResponseEntity<>(newOperation, HttpStatus.CREATED);
+        return new ResponseEntity<>(newOperation, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")

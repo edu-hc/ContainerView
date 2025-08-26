@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ContainerRepository extends JpaRepository<Container, String> {
 
-    Optional<Container> findById(String id);
+    Optional<Container> findById(long id);
 }
