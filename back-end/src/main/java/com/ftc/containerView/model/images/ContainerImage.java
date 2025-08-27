@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Entity
-@Table(name = "images")
+@Table(name = "container_images")
 @Builder
 @AllArgsConstructor
 @Data
