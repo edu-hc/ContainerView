@@ -15,7 +15,7 @@ CREATE TABLE containers (
                             updated_at TIMESTAMP,
                             updated_by_cpf VARCHAR(15),
                             FOREIGN KEY (user_id) REFERENCES users(id),
-                            FOREIGN KEY (operation_id) REFERENCES operations(id)
+                            FOREIGN KEY (operation_id) REFERENCES operations(id),
                             CONSTRAINT chk_container_status CHECK (status IN ('OPEN', 'PENDING', 'COMPLETED'))
 
 );
