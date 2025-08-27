@@ -35,7 +35,6 @@ public class Container {
     private String description;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @Column(name = "container_images")
     @JsonIgnore
     private List<ContainerImage> containerImages = new ArrayList<>();
 

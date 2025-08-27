@@ -1,5 +1,5 @@
 -- Tabela de imagens dos containers
-CREATE TABLE images (
+CREATE TABLE container_images (
                         id BIGSERIAL PRIMARY KEY,
                         container_id_def BIGINT NOT NULL,
                         image_key VARCHAR(255) NOT NULL,

@@ -48,6 +48,7 @@ public class StoreImageService {
                 containerImage.setImageKey(s3Service.uploadFile(image.getBytes(), fileName, "application/jpg"));
                 containerImage.setContainer(containerRepository.findById(containerIdDef).get());
                 containerImage.setCategory(category);
+                containerImages.add(containerImage);
                 logger.info("Imagem {} {} armazenada com sucesso como {}.", category,imageCount, fileName);
             }
             catch (Exception e) {
