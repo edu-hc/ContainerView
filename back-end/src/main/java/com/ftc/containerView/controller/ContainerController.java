@@ -91,7 +91,7 @@ public class ContainerController {
 
         containerService.validateMandatoryCategories(containerImages);
 
-        newContainer.setContainerImages(containerImages);
+        newContainer.getContainerImages().addAll(containerImages); // Adiciona as imagens ao containerContainerImages(containerImages);
         containerRepository.save(newContainer);
 
         long executionTime = System.currentTimeMillis() - startTime;
