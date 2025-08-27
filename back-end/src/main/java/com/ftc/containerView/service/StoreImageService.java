@@ -38,6 +38,10 @@ public class StoreImageService {
         int imageCount = 0;
         List<ContainerImage> containerImages = new ArrayList<>();
 
+        if (images == null || images.length == 0) {
+            return containerImages;
+        }
+
         for (MultipartFile image : images) {
             String fileName = "image_" + imageCount++ + "_" + category + "_" + containerIdDef + ".jpg";
 
@@ -48,7 +52,8 @@ public class StoreImageService {
                 containerImage.setImageKey(s3Service.uploadFile(image.getBytes(), fileName, "application/jpg"));
                 containerImage.setContainer(containerRepository.findById(containerIdDef).get());
                 containerImage.setCategory(category);
-                containerImages.add(containerImage);
+                ContainerImage savedImage = containerImageRepository.save(containerImage);
+                containerImages.add(savedImage);
                 logger.info("Imagem {} {} armazenada com sucesso como {}.", category,imageCount, fileName);
             }
             catch (Exception e) {

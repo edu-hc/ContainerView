@@ -34,7 +34,7 @@ public class Container {
     @Column(name = "description", nullable = false, length = 500)
     private String description;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy =  "container", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonIgnore
     private List<ContainerImage> containerImages = new ArrayList<>();
 
