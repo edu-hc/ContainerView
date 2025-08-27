@@ -3,6 +3,7 @@ package com.ftc.containerView.controller;
 import com.ftc.containerView.infra.aws.S3Service;
 import com.ftc.containerView.infra.security.auth.UserContextService;
 import com.ftc.containerView.model.container.Container;
+import com.ftc.containerView.model.container.ContainerStatus;
 import com.ftc.containerView.model.container.CreateContainerDTO;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
@@ -43,9 +44,42 @@ public class ContainerController {
         this.containerRepository = containerRepository;
     }
 
-
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<Container> createContainer(@RequestParam("containerId") String containerId,
+                                                     @RequestParam("description") String description,
+                                                     @RequestParam("operationId") Long operationId,
+                                                     @RequestParam("sacksCount") int sacksCount,
+                                                     @RequestParam("tareTons") float tareTons,
+                                                     @RequestParam("liquidWeight") float liquidWeight,
+                                                     @RequestParam("grossWeight") float grossWeight,
+                                                     @RequestParam("agencySeal") String agencySeal,
+                                                     @RequestParam("otherSeals") List<String> otherSeals,
+                                                     HttpServletRequest request) {
+
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("POST /containers - Criando novo container. ContainerId: {}, UserId: {}, IP: {}",
+                containerId, userId, request.getRemoteAddr());
+
+
+        long startTime = System.currentTimeMillis();
+
+        CreateContainerDTO containerDTO = new CreateContainerDTO(containerId, description, new ArrayList<>(), userId, operationId,
+                sacksCount, tareTons, liquidWeight, grossWeight, agencySeal, otherSeals, ContainerStatus.OPEN);
+
+        Container newContainer = containerService.createContainer(containerDTO);
+
+        containerRepository.save(newContainer);
+
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("POST /containers concluído. Container criado com ID: {}. Tempo de resposta: {}ms",
+                newContainer.getId(), executionTime);
+
+        return ResponseEntity.status(201).body(newContainer);
+    }
+
+    @PostMapping(path = "/images", consumes = "multipart/form-data")
+    public ResponseEntity<Container> createContainerWithImages(@RequestParam("containerId") String containerId,
                                                      @RequestParam("description") String description,
                                                      @RequestParam("operationId") Long operationId,
                                                      @RequestParam("sacksCount") int sacksCount,
@@ -68,14 +102,14 @@ public class ContainerController {
 
         Long userId = userContextService.getCurrentUserId();
 
-        logger.info("POST /containers - Criando novo container. ContainerId: {}, UserId: {}, IP: {}",
+        logger.info("POST /containers/images - Criando novo container. ContainerId: {}, UserId: {}, IP: {}",
                 containerId, userId, request.getRemoteAddr());
 
 
         long startTime = System.currentTimeMillis();
 
         CreateContainerDTO containerDTO = new CreateContainerDTO(containerId, description, new ArrayList<>(), userId, operationId,
-                sacksCount, tareTons, liquidWeight, grossWeight, agencySeal, otherSeals);
+                sacksCount, tareTons, liquidWeight, grossWeight, agencySeal, otherSeals, ContainerStatus.PENDING);
 
         Container newContainer = containerService.createContainer(containerDTO);
 
@@ -95,7 +129,7 @@ public class ContainerController {
         containerRepository.save(newContainer);
 
         long executionTime = System.currentTimeMillis() - startTime;
-        logger.info("POST /containers concluído. Container criado com ID: {}. Tempo de resposta: {}ms",
+        logger.info("POST /containers/images concluído. Container criado com ID: {}. Tempo de resposta: {}ms",
                 newContainer.getId(), executionTime);
 
         return ResponseEntity.status(201).body(newContainer);
@@ -121,10 +155,95 @@ public class ContainerController {
         return ResponseEntity.ok(container);
     }
 
-    @GetMapping("/{id}/imagens")
-    public ResponseEntity<List<String>> getContainerImages(@PathVariable String id) {
+    @GetMapping("/{id}/images/VAZIO_FORRADO")
+    public ResponseEntity<List<String>> getContainerImagesVazioForrado(@PathVariable String id) {
         Container container = containerService.getContainersByContainerId(id);
         List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.VAZIO_FORRADO)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/FIADA")
+    public ResponseEntity<List<String>> getContainerImagesFiada(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.FIADA)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/CHEIO_ABERTO")
+    public ResponseEntity<List<String>> getContainerImagesCheioAberto(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.CHEIO_ABERTO)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/MEIA_PORTA")
+    public ResponseEntity<List<String>> getContainerImagesMeiaPorta(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.MEIA_PORTA)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/LACRADO_FECHADO")
+    public ResponseEntity<List<String>> getContainerImagesLacradoFechado(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.LACRADO_FECHADO)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/LACRES_PRINCIPAIS")
+    public ResponseEntity<List<String>> getContainerImagesLacresPrincipais(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.LACRES_PRINCIPAIS)
+                .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
+        List<String> imageUrls = new ArrayList<>();
+        for (String key : imageKeys) {
+            // 60 minutos de validade
+            imageUrls.add(s3Service.generatePresignedUrl(key, 60));
+        }
+        return ResponseEntity.ok(imageUrls);
+    }
+
+    @GetMapping("/{id}/images/LACRES_OUTROS")
+    public ResponseEntity<List<String>> getContainerImagesLacresOutros(@PathVariable String id) {
+        Container container = containerService.getContainersByContainerId(id);
+        List<String> imageKeys = container.getContainerImages().stream()
+                .filter(image -> image.getCategory() == ContainerImageCategory.LACRES_OUTROS)
                 .map(ContainerImage::getImageKey).toList(); // pega o imageKey;
         List<String> imageUrls = new ArrayList<>();
         for (String key : imageKeys) {

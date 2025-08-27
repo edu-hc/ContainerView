@@ -2,6 +2,7 @@ package com.ftc.containerView.model.container;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.operation.Operation;
+import com.ftc.containerView.model.operation.OperationStatus;
 import com.ftc.containerView.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -65,6 +66,10 @@ public class Container {
     @Column(name = "other_seals")
     private List<String> otherSeals = new ArrayList<>();
 
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ContainerStatus status;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -80,7 +85,8 @@ public class Container {
 
 
     public Container(String containerId, String description, User user, Operation operation, int sacksCount,
-                     float tareTons, float liquidWeight, float grossWeight, String agencySeal, List<String> otherSeals) {
+                     float tareTons, float liquidWeight, float grossWeight, String agencySeal, List<String> otherSeals,
+                     ContainerStatus status) {
         this.description = description;
         this.user = user;
         this.operation = operation;
@@ -91,6 +97,7 @@ public class Container {
         this.agencySeal = agencySeal;
         this.otherSeals = otherSeals;
         this.containerId = containerId;
+        this.status = status;
 
     }
 }

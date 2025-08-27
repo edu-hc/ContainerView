@@ -15,5 +15,6 @@ public record CreateContainerDTO(
         float liquidWeight,
         float grossWeight,
         String agencySeal,
-        List<String> otherSeals
+        List<String> otherSeals,
+        ContainerStatus status
 ) {}

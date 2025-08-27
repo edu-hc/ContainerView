@@ -10,11 +10,14 @@ CREATE TABLE containers (
                             tare_weight FLOAT DEFAULT 0.0,
                             gross_weight FLOAT DEFAULT 0.0,
                             agency_seal VARCHAR(255),
+                            status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
                             created_at TIMESTAMP NOT NULL,
                             updated_at TIMESTAMP,
                             updated_by_cpf VARCHAR(15),
                             FOREIGN KEY (user_id) REFERENCES users(id),
                             FOREIGN KEY (operation_id) REFERENCES operations(id)
+                            CONSTRAINT chk_container_status CHECK (status IN ('OPEN', 'PENDING', 'COMPLETED'))
+
 );
 
 -- Tabela para armazenar other_seals (ElementCollection)
