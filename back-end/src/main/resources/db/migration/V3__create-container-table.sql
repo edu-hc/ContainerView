@@ -20,6 +20,6 @@ CREATE TABLE containers (
 -- Tabela para armazenar other_seals (ElementCollection)
 CREATE TABLE container_other_seals (
                                        container_id BIGINT NOT NULL,
-                                       other_seal VARCHAR(255) NOT NULL,
+                                       other_seals VARCHAR(255) NOT NULL,
                                        FOREIGN KEY (container_id) REFERENCES containers(id) ON DELETE CASCADE
 );
