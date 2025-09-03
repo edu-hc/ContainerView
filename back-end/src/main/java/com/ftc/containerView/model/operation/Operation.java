@@ -2,6 +2,8 @@ package com.ftc.containerView.model.operation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ftc.containerView.model.container.Container;
+import com.ftc.containerView.model.images.ContainerImage;
+import com.ftc.containerView.model.images.SackImage;
 import com.ftc.containerView.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -65,6 +67,10 @@ public class Operation {
 
     @Column(name = "load_deadline", nullable = false)
     private String loadDeadline;
+
+    @OneToMany(mappedBy =  "operation", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private List<SackImage> sacksImages = new ArrayList<>();
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
