@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/containers")
@@ -115,13 +114,13 @@ public class ContainerController {
 
         List<ContainerImage> containerImages = new ArrayList<>();
 
-        containerImages.addAll(storeImageService.storeImages(vazioForradoImages, newContainer.getId(), ContainerImageCategory.VAZIO_FORRADO));
-        containerImages.addAll(storeImageService.storeImages(fiadaImages, newContainer.getId(), ContainerImageCategory.FIADA));
-        containerImages.addAll(storeImageService.storeImages(cheioAbertoImages, newContainer.getId(), ContainerImageCategory.CHEIO_ABERTO));
-        containerImages.addAll(storeImageService.storeImages(meiaPortaImages, newContainer.getId(), ContainerImageCategory.MEIA_PORTA));
-        containerImages.addAll(storeImageService.storeImages(lacradoFechadoImages, newContainer.getId(), ContainerImageCategory.LACRADO_FECHADO));
-        containerImages.addAll(storeImageService.storeImages(lacresPrincipalImages, newContainer.getId(), ContainerImageCategory.LACRES_PRINCIPAIS));
-        containerImages.addAll(storeImageService.storeImages(lacresOutrosImages, newContainer.getId(), ContainerImageCategory.LACRES_OUTROS));
+        containerImages.addAll(storeImageService.storeImagesToContainer(vazioForradoImages, newContainer.getId(), ContainerImageCategory.VAZIO_FORRADO));
+        containerImages.addAll(storeImageService.storeImagesToContainer(fiadaImages, newContainer.getId(), ContainerImageCategory.FIADA));
+        containerImages.addAll(storeImageService.storeImagesToContainer(cheioAbertoImages, newContainer.getId(), ContainerImageCategory.CHEIO_ABERTO));
+        containerImages.addAll(storeImageService.storeImagesToContainer(meiaPortaImages, newContainer.getId(), ContainerImageCategory.MEIA_PORTA));
+        containerImages.addAll(storeImageService.storeImagesToContainer(lacradoFechadoImages, newContainer.getId(), ContainerImageCategory.LACRADO_FECHADO));
+        containerImages.addAll(storeImageService.storeImagesToContainer(lacresPrincipalImages, newContainer.getId(), ContainerImageCategory.LACRES_PRINCIPAIS));
+        containerImages.addAll(storeImageService.storeImagesToContainer(lacresOutrosImages, newContainer.getId(), ContainerImageCategory.LACRES_OUTROS));
 
         containerService.validateMandatoryCategories(containerImages);
 
