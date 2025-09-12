@@ -396,6 +396,30 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ImageExceedsMaxSizeException.class)
+    public ResponseEntity<RestErrorMessage> handleImageNotFound(ImageNotFoundException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Imagem não encontrada - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
+
+        metricsCollector.recordError("IMAGE_NOT_FOUND", "404", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "image_not_found");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.NOT_FOUND)
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+
+
+    @ExceptionHandler(ImageExceedsMaxSizeException.class)
     public ResponseEntity<RestErrorMessage> handleImageExceedsMaxSize(ImageExceedsMaxSizeException ex, HttpServletRequest request) {
         Timer.Sample sample = metricsCollector.startTimer();
         String errorId = generateErrorId();

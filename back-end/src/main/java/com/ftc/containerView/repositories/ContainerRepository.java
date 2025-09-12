@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ContainerRepository extends JpaRepository<Container, String> {
 
     Optional<Container> findById(long id);
+
+    Optional<Container> findByContainerId(String containerId);
 }
