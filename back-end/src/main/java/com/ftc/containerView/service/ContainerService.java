@@ -1,6 +1,7 @@
 package com.ftc.containerView.service;
 
 import com.ftc.containerView.infra.errorhandling.exceptions.ContainerNotFoundException;
+import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.model.container.ContainerStatus;
@@ -9,6 +10,7 @@ import com.ftc.containerView.model.container.UpdateContainerDTO;
 import com.ftc.containerView.model.images.AddImagesToContainerResultDTO;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
+import com.ftc.containerView.model.operation.Operation;
 import com.ftc.containerView.model.operation.OperationStatus;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.ContainerRepository;
@@ -59,36 +61,68 @@ public class ContainerService {
         }
     }
 
-    public List<Container> createMultipleContainers (List<CreateContainerDTO> containers, long userId, long operationId) {
-        logger.info("Criando novos containers: {}", containers);
-        try {
-            List<Container> newContainers = new ArrayList<>();
-            Optional<User> user = userRepository.findById(userId);
-            if (user.isEmpty()) {
-                throw new UserNotFoundException("Usuário não encontrado com ID: " + userId);
+    @Transactional
+    public List<Container> createMultipleContainers(List<CreateContainerDTO> containerDTOs, Long userId) {
+        logger.info("Criando {} containers em lote para usuário {}", containerDTOs.size(), userId);
+
+        // Validar usuário uma vez só
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + userId));
+
+        List<Container> createdContainers = new ArrayList<>();
+        Set<String> containerIds = new HashSet<>();
+
+        // Validar IDs duplicados na própria lista
+        for (CreateContainerDTO dto : containerDTOs) {
+            if (!containerIds.add(dto.containerId())) {
+                logger.error("Container duplicado na requisição: {}", dto.containerId());
+                throw new IllegalArgumentException("Container duplicado na requisição: " + dto.containerId());
             }
-            Optional<com.ftc.containerView.model.operation.Operation> operation = operationRepository.findById(operationId);
-            if (operation.isEmpty()) {
-                throw new IllegalArgumentException("Operação não encontrada com ID: " + operationId);
-            }
-
-            for (CreateContainerDTO container : containers) {
-
-                Container newContainer = new Container(container.containerId(), container.description(),
-                        userRepository.findById(container.userId()).get(), operationRepository.findById(container.operationId()).get(),
-                        container.sacksCount(), container.tareTons(), container.liquidWeight(), container.grossWeight(),
-                        container.agencySeal(), container.otherSeals(), container.status());
-
-                newContainers.add(containerRepository.save(newContainer));
-            }
-            List<Container> saved = containerRepository.saveAll(newContainers);
-            logger.info("Containers criados com sucesso: {}", saved);
-
-            return saved;
-        } catch (IllegalArgumentException e) {
-            logger.error("Erro ao criar containers: {}. Erro: {}", containers, e.getMessage(), e);
-            throw new ContainerNotFoundException("Container nao encontrado com ID: " + containers);
         }
+
+        // Criar cada container
+        for (CreateContainerDTO containerDTO : containerDTOs) {
+            try {
+                // Verificar se já existe
+                if (containerRepository.existsById(containerDTO.containerId())) {
+                    logger.error("Container já existe: {}", containerDTO.containerId());
+                    throw new IllegalArgumentException("Container já existe: " + containerDTO.containerId());
+                }
+
+                // Validar operação existe
+                Operation operation = operationRepository.findById(containerDTO.operationId())
+                        .orElseThrow(() -> new OperationNotFoundException(
+                                "Operação não encontrada: " + containerDTO.operationId()));
+
+                // Criar container usando metodo existente
+                Container newContainer = new Container(
+                        containerDTO.containerId(),
+                        containerDTO.description(),
+                        user,
+                        operation,
+                        containerDTO.sacksCount(),
+                        containerDTO.tareTons(),
+                        containerDTO.liquidWeight(),
+                        containerDTO.grossWeight(),
+                        containerDTO.agencySeal(),
+                        containerDTO.otherSeals(),
+                        containerDTO.status() != null ? containerDTO.status() : ContainerStatus.PENDING
+                );
+
+                Container saved = containerRepository.save(newContainer);
+                createdContainers.add(saved);
+
+                logger.debug("Container {} criado com sucesso", containerDTO.containerId());
+
+            } catch (Exception e) {
+                // Em caso de erro, fazer rollback de toda a transação
+                logger.error("Erro ao criar container {}: {}", containerDTO.containerId(), e.getMessage());
+                throw new RuntimeException("Erro ao criar container " + containerDTO.containerId() + ": " + e.getMessage(), e);
+            }
+        }
+
+        logger.info("{} containers criados com sucesso", createdContainers.size());
+        return createdContainers;
     }
 
     @Transactional

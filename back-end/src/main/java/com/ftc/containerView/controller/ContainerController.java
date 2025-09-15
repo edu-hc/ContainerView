@@ -17,10 +17,12 @@ import com.ftc.containerView.service.ContainerImageService;
 import com.ftc.containerView.service.ContainerService;
 import com.ftc.containerView.service.StoreImageService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -82,6 +84,44 @@ public class ContainerController {
                 newContainer.getId(), executionTime);
 
         return ResponseEntity.status(201).body(newContainer);
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<Container>> createMultipleContainers(
+            @RequestBody @Valid List<CreateContainerDTO> containers,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("POST /containers/batch - Criando {} containers. UserId: {}, IP: {}",
+                containers.size(), userId, request.getRemoteAddr());
+
+        try {
+            // Validar quantidade
+            if (containers.isEmpty()) {
+                logger.warn("Lista de containers vazia");
+                return ResponseEntity.badRequest().build();
+            }
+
+            if (containers.size() > 50) {
+                logger.error("Tentativa de criar {} containers. Máximo permitido: 50", containers.size());
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Criar containers usando o service
+            List<Container> createdContainers = containerService.createMultipleContainers(containers, userId);
+
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("POST /containers/batch concluído. {} containers criados. Tempo: {}ms",
+                    createdContainers.size(), execTime);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdContainers);
+
+        } catch (Exception e) {
+            logger.error("Erro ao criar múltiplos containers: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping(path = "/images", consumes = "multipart/form-data")
