@@ -395,7 +395,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(error);
     }
 
-    @ExceptionHandler(ImageExceedsMaxSizeException.class)
+    @ExceptionHandler(ImageNotFoundException.class)
     public ResponseEntity<RestErrorMessage> handleImageNotFound(ImageNotFoundException ex, HttpServletRequest request) {
         Timer.Sample sample = metricsCollector.startTimer();
         String errorId = generateErrorId();
