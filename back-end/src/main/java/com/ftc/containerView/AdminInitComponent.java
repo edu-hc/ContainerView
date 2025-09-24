@@ -6,6 +6,9 @@ import com.ftc.containerView.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +25,9 @@ public class AdminInitComponent implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        List<User> admins = userRepository.findByRole(UserRole.ADMIN);
+        boolean admins = userRepository.existsByRole(UserRole.ADMIN);
 
-        if (admins.isEmpty()) {
+        if (!admins) {
             log.info("Nenhum usuário encontrado no banco. Criando usuário admin padrão...");
 
             User admin = new User(
