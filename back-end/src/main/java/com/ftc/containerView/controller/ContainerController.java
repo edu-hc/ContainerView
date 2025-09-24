@@ -366,15 +366,6 @@ public class ContainerController {
         return ResponseEntity.ok(updatedContainer);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Container>> getAllContainers(HttpServletRequest request) {
-        long startTime = System.currentTimeMillis();
-        logger.info("GET /containers - Buscando todos os containers. IP: {}", request.getRemoteAddr());
-        List<Container> containers = containerService.getContainers();
-        long execTime = System.currentTimeMillis() - startTime;
-        logger.info("GET /containers concluído. Encontrados {} containers. Tempo de resposta: {}ms", containers.size(), execTime);
-        return ResponseEntity.ok(containers);
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Container> getContainerByContainerId(@PathVariable String id, HttpServletRequest request) {
