@@ -10,6 +10,7 @@ import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
 import com.ftc.containerView.model.user.UserMeDTO;
 import com.ftc.containerView.repositories.UserRepository;
+import com.ftc.containerView.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AuthController {
     private final EmailService emailService;
     private final TokenService tokenService;
     private final UserContextService userContextService;
+    private final UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity login (@Valid @RequestBody LoginDTO login, HttpServletRequest request) {
@@ -95,7 +97,7 @@ public class AuthController {
                     passwordEncoder.encode(register.password()),
                     register.role(),
                     register.twoFactorEnabled());
-            User savedUser = userRepository.save(newUser);
+            User savedUser = userService.registerUser(newUser);
             long execTime = System.currentTimeMillis() - startTime;
             logger.info("Usuário registrado com sucesso: {}. Tempo de resposta: {}ms", savedUser.getCpf(), execTime);
             return ResponseEntity.ok(savedUser);

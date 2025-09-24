@@ -9,6 +9,7 @@ import com.ftc.containerView.model.images.AddSackImagesResultDTO;
 import com.ftc.containerView.model.images.SackImageResponseDTO;
 import com.ftc.containerView.model.operation.OperationDTO;
 import com.ftc.containerView.model.operation.Operation;
+import com.ftc.containerView.model.operation.OperationStatus;
 import com.ftc.containerView.model.operation.UpdateOperationDTO;
 import com.ftc.containerView.service.OperationService;
 import com.ftc.containerView.service.SackImageService;
@@ -17,6 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,16 +53,60 @@ public class OperationController {
     }
 
     @GetMapping
-    public ResponseEntity <List<Operation>> getAllOperations(HttpServletRequest request) {
-        logger.info("GET /operations - Buscando todas as operações. IP: {}", request.getRemoteAddr());
+    public ResponseEntity<Page<Operation>> getAllOperations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            HttpServletRequest request) {
 
         long startTime = System.currentTimeMillis();
+        logger.info("GET /operations - Página: {}, Tamanho: {}, Ordenação: {} {}. IP: {}",
+                page, size, sortBy, sortDirection, request.getRemoteAddr());
 
-        List<Operation> operations = operationService.findOperations();
+        if (size > 100) {
+            size = 100;
+            logger.warn("Tamanho da página limitado a 100 itens");
+        }
 
-        long executionTime = System.currentTimeMillis() - startTime;
-        logger.info("GET /operations concluído. Encontradas {} operações. Tempo de resposta: {}ms",
-                operations.size(), executionTime);
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Operation> operations = operationService.findOperations(pageable);
+
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /operations concluído. Página {} de {} ({} operações de {} total). Tempo: {}ms",
+                operations.getNumber() + 1, operations.getTotalPages(),
+                operations.getNumberOfElements(), operations.getTotalElements(), execTime);
+
+        return ResponseEntity.ok(operations);
+    }
+    @GetMapping("/by-status/{status}")
+    public ResponseEntity<Page<Operation>> getOperationsByStatus(
+            @PathVariable OperationStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        logger.info("GET /operations/by-status/{} - Página: {}, Tamanho: {}. IP: {}",
+                status, page, size, request.getRemoteAddr());
+
+        if (size > 100) {
+            size = 100;
+        }
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Operation> operations = operationService.getOperationsByStatus(status, pageable);
+
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /operations/by-status/{} concluído. Página {} de {} ({} operações). Tempo: {}ms",
+                status, operations.getNumber() + 1, operations.getTotalPages(),
+                operations.getNumberOfElements(), execTime);
 
         return ResponseEntity.ok(operations);
     }

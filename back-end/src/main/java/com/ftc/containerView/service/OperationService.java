@@ -5,6 +5,7 @@ import com.ftc.containerView.infra.errorhandling.exceptions.ContainerNotFoundExc
 import com.ftc.containerView.infra.errorhandling.exceptions.ImageNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
+import com.ftc.containerView.infra.security.InputSanitizer;
 import com.ftc.containerView.model.container.ContainerStatus;
 import com.ftc.containerView.model.images.AddSackImagesResultDTO;
 import com.ftc.containerView.model.images.SackImage;
@@ -23,6 +24,8 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,21 +44,31 @@ public class OperationService {
     private final S3Service s3Service;
     private final SackImageRepository sackImageRepository;
     private final StoreImageService storeImageService;
+    private final InputSanitizer inputSanitizer;
 
     @Autowired
-    public OperationService(OperationRepository operationRepository, UserRepository userRepository, S3Service s3Service, ContainerRepository containerRepository, ContainerService containerService, SackImageRepository sackImageRepository, StoreImageService storeImageService) {
+    public OperationService(OperationRepository operationRepository, UserRepository userRepository, S3Service s3Service, ContainerRepository containerRepository, ContainerService containerService, SackImageRepository sackImageRepository, StoreImageService storeImageService, InputSanitizer inputSanitizer) {
         this.operationRepository = operationRepository;
         this.userRepository = userRepository;
         this.s3Service = s3Service;
         this.sackImageRepository = sackImageRepository;
         this.storeImageService = storeImageService;
+        this.inputSanitizer = inputSanitizer;
         logger.info("OperationService inicializado com sucesso");
     }
 
-    public List<Operation> findOperations() {
-        logger.debug("Buscando todas as operações");
-        List<Operation> operations = operationRepository.findAll();
-        logger.debug("Encontradas {} operações", operations.size());
+    public Page<Operation> findOperations(Pageable pageable) {
+        logger.info("Buscando operações com paginação - Página: {}, Tamanho: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Operation> operations = operationRepository.findAll(pageable);
+
+        logger.info("Encontradas {} operações na página {} de {} (Total: {})",
+                operations.getNumberOfElements(),
+                operations.getNumber() + 1,
+                operations.getTotalPages(),
+                operations.getTotalElements());
+
         return operations;
     }
 
@@ -72,6 +85,41 @@ public class OperationService {
             throw new OperationNotFoundException("Operação com ID " + id + " nao encontrada");
         }
 
+    }
+
+    public Page<Operation> getOperationsByStatus(OperationStatus status, Pageable pageable) {
+        logger.info("Buscando operações com status {} - Página: {}, Tamanho: {}",
+                status, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Operation> operations = operationRepository.findByStatus(status, pageable);
+
+        logger.info("Encontradas {} operações com status {} na página {} de {} (Total: {})",
+                operations.getNumberOfElements(), status,
+                operations.getNumber() + 1, operations.getTotalPages(),
+                operations.getTotalElements());
+
+        return operations;
+    }
+
+
+    public Page<Operation> getOperationsByUser(Long userId, Pageable pageable) {
+        logger.info("Buscando operações do usuário {} - Página: {}, Tamanho: {}",
+                userId, pageable.getPageNumber(), pageable.getPageSize());
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    logger.warn("Usuário com ID {} não encontrado", userId);
+                    return new UserNotFoundException("Usuário não encontrado com ID: " + userId);
+                });
+
+        Page<Operation> operations = operationRepository.findByUser(user, pageable);
+
+        logger.info("Encontradas {} operações do usuário {} na página {} de {} (Total: {})",
+                operations.getNumberOfElements(), userId,
+                operations.getNumber() + 1, operations.getTotalPages(),
+                operations.getTotalElements());
+
+        return operations;
     }
 
     @Transactional
@@ -93,27 +141,31 @@ public class OperationService {
 
             // Atualizar apenas os campos enviados (não nulos)
             if (updateDTO.ctv() != null && !existingOperation.getCtv().equals(updateDTO.ctv())) {
-                existingOperation.setCtv(updateDTO.ctv());
+                String sanitizedCtv = inputSanitizer.sanitizePlainText(updateDTO.ctv());
+                existingOperation.setCtv(sanitizedCtv);
                 changed = true;
-                logger.debug("CTV atualizado para: {}", updateDTO.ctv());
+                logger.debug("CTV atualizado para: {}", sanitizedCtv);
             }
 
             if (updateDTO.exporter() != null && !existingOperation.getExporter().equals(updateDTO.exporter())) {
-                existingOperation.setExporter(updateDTO.exporter());
+                String sanitizedExporter = inputSanitizer.sanitizePlainText(updateDTO.exporter());
+                existingOperation.setExporter(sanitizedExporter);
                 changed = true;
-                logger.debug("Exportador atualizado para: {}", updateDTO.exporter());
+                logger.debug("Exportador atualizado para: {}", sanitizedExporter);
             }
 
             if (updateDTO.ship() != null && !existingOperation.getShip().equals(updateDTO.ship())) {
-                existingOperation.setShip(updateDTO.ship());
+                String sanitizedShip = inputSanitizer.sanitizePlainText(updateDTO.ship());
+                existingOperation.setShip(sanitizedShip);
                 changed = true;
-                logger.debug("Navio atualizado para: {}", updateDTO.ship());
+                logger.debug("Navio atualizado para: {}", sanitizedShip);
             }
 
             if (updateDTO.terminal() != null && !existingOperation.getTerminal().equals(updateDTO.terminal())) {
-                existingOperation.setTerminal(updateDTO.terminal());
+                String sanitizedTerminal = inputSanitizer.sanitizePlainText(updateDTO.terminal());
+                existingOperation.setTerminal(sanitizedTerminal);
                 changed = true;
-                logger.debug("Terminal atualizado para: {}", updateDTO.terminal());
+                logger.debug("Terminal atualizado para: {}", sanitizedTerminal);
             }
 
             if (updateDTO.deadlineDraft() != null && !existingOperation.getDeadlineDraft().equals(updateDTO.deadlineDraft())) {
@@ -123,9 +175,10 @@ public class OperationService {
             }
 
             if (updateDTO.destination() != null && !existingOperation.getDestination().equals(updateDTO.destination())) {
-                existingOperation.setDestination(updateDTO.destination());
+                String sanitizedDestination = inputSanitizer.sanitizePlainText(updateDTO.destination());
+                existingOperation.setDestination(sanitizedDestination);
                 changed = true;
-                logger.debug("Destino atualizado para: {}", updateDTO.destination());
+                logger.debug("Destino atualizado para: {}", sanitizedDestination);
             }
 
             if (updateDTO.arrivalDate() != null && !existingOperation.getArrivalDate().equals(updateDTO.arrivalDate())) {
@@ -135,21 +188,24 @@ public class OperationService {
             }
 
             if (updateDTO.reservation() != null && !existingOperation.getReservation().equals(updateDTO.reservation())) {
-                existingOperation.setReservation(updateDTO.reservation());
+                String sanitizedReservation = inputSanitizer.sanitizePlainText(updateDTO.reservation());
+                existingOperation.setReservation(sanitizedReservation);
                 changed = true;
-                logger.debug("Reserva atualizada para: {}", updateDTO.reservation());
+                logger.debug("Reserva atualizada para: {}", sanitizedReservation);
             }
 
             if (updateDTO.refClient() != null && !existingOperation.getRefClient().equals(updateDTO.refClient())) {
-                existingOperation.setRefClient(updateDTO.refClient());
+                String sanitizedRefClient = inputSanitizer.sanitizePlainText(updateDTO.refClient());
+                existingOperation.setRefClient(sanitizedRefClient);
                 changed = true;
-                logger.debug("Referência do cliente atualizada para: {}", updateDTO.refClient());
+                logger.debug("Referência do cliente atualizada para: {}", sanitizedRefClient);
             }
 
             if (updateDTO.loadDeadline() != null && !existingOperation.getLoadDeadline().equals(updateDTO.loadDeadline())) {
-                existingOperation.setLoadDeadline(updateDTO.loadDeadline());
+                String sanitizedLoadDeadline = inputSanitizer.sanitizePlainText(updateDTO.loadDeadline());
+                existingOperation.setLoadDeadline(sanitizedLoadDeadline);
                 changed = true;
-                logger.debug("Prazo de carregamento atualizado para: {}", updateDTO.loadDeadline());
+                logger.debug("Prazo de carregamento atualizado para: {}", sanitizedLoadDeadline);
             }
 
             if (updateDTO.status() != null && existingOperation.getStatus() != updateDTO.status()) {
@@ -370,18 +426,29 @@ public class OperationService {
             Operation operation = new Operation(operationDTO, user);
             operation.setStatus(OperationStatus.OPEN);
 
+            // Sanitização dos campos de texto livre
+            String sanitizedCtv = inputSanitizer.sanitizePlainText(operationDTO.ctv());
+            String sanitizedExporter = inputSanitizer.sanitizePlainText(operationDTO.exporter());
+            String sanitizedShip = inputSanitizer.sanitizePlainText(operationDTO.ship());
+            String sanitizedTerminal = inputSanitizer.sanitizePlainText(operationDTO.terminal());
+            String sanitizedDestination = inputSanitizer.sanitizePlainText(operationDTO.destination());
+            String sanitizedReservation = inputSanitizer.sanitizePlainText(operationDTO.reservation());
+            String sanitizedRefClient = inputSanitizer.sanitizePlainText(operationDTO.refClient());
+            String sanitizedLoadDeadline = inputSanitizer.sanitizePlainText(operationDTO.loadDeadline());
+
+            // Atribuindo os valores sanitizados à operação
+            operation.setCtv(sanitizedCtv);
+            operation.setExporter(sanitizedExporter);
+            operation.setShip(sanitizedShip);
+            operation.setTerminal(sanitizedTerminal);
+            operation.setDestination(sanitizedDestination);
+            operation.setReservation(sanitizedReservation);
+            operation.setRefClient(sanitizedRefClient);
+            operation.setLoadDeadline(sanitizedLoadDeadline);
+
             // Salvando a operação
             logger.debug("Salvando a operação no banco de dados");
             operationRepository.save(operation);
-
-//            List<Container> containers = new ArrayList<>();
-//            if (operationDTO.containers() != null && operationDTO.containers().size() > 0) {
-//                // Criando o container
-//                logger.debug("Criando {} containeres na operação", operationDTO.containers().size());
-//                containers = containerService.createContainers(operationDTO.containers(), userId);
-//                logger.debug("Containers criados com sucesso. ID dos containers: {}", containers.stream().map(Container::getId).toList());
-//            }
-
 
             // Associando a operação ao usuário
             logger.debug("Associando operação ao usuário ID: {}", user.getId());

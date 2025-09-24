@@ -16,9 +16,12 @@ import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.ContainerRepository;
 import com.ftc.containerView.repositories.OperationRepository;
 import com.ftc.containerView.repositories.UserRepository;
+import com.ftc.containerView.infra.security.InputSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,24 +37,36 @@ public class ContainerService {
     private final ContainerRepository containerRepository;
     private final UserRepository userRepository;
     private final StoreImageService storeImageService;
-
     private final OperationRepository operationRepository;
+    private final InputSanitizer inputSanitizer;
 
     @Autowired
-    public ContainerService(ContainerRepository containerRepository, UserRepository userRepository, StoreImageService storeImageService, OperationRepository operationRepository) {
+    public ContainerService(ContainerRepository containerRepository, UserRepository userRepository, StoreImageService storeImageService, OperationRepository operationRepository, InputSanitizer inputSanitizer) {
         this.containerRepository = containerRepository;
         this.userRepository = userRepository;
         this.storeImageService = storeImageService;
         this.operationRepository = operationRepository;
+        this.inputSanitizer = inputSanitizer;
     }
 
     public Container createContainer(CreateContainerDTO container) {
         logger.info("Criando novo container: {}", container.containerId());
         try {
-            Container newContainer = new Container(container.containerId(), container.description(),
+            // Sanitização dos campos de texto livre
+            String sanitizedContainerId = inputSanitizer.sanitizePlainText(container.containerId());
+            String sanitizedDescription = inputSanitizer.sanitizeBasicHtml(container.description());
+            String sanitizedAgencySeal = inputSanitizer.sanitizePlainText(container.agencySeal());
+            List<String> sanitizedOtherSeals = null;
+            if (container.otherSeals() != null) {
+                sanitizedOtherSeals = container.otherSeals().stream()
+                    .map(inputSanitizer::sanitizePlainText)
+                    .toList();
+            }
+
+            Container newContainer = new Container(sanitizedContainerId, sanitizedDescription,
                     userRepository.findById(container.userId()).get(), operationRepository.findById(container.operationId()).get(),
                     container.sacksCount(), container.tareTons(), container.liquidWeight(), container.grossWeight(),
-                    container.agencySeal(), container.otherSeals(), container.status());
+                    sanitizedAgencySeal, sanitizedOtherSeals, container.status());
             Container saved = containerRepository.save(newContainer);
             logger.info("Container criado com sucesso: {}", saved.getId());
             return saved;
@@ -59,6 +74,55 @@ public class ContainerService {
             logger.error("Erro ao criar container: {}. Erro: {}", container.containerId(), e.getMessage(), e);
             throw new ContainerNotFoundException("Container nao encontrado com ID: " + container.containerId());
         }
+    }
+
+    public Page<Container> getContainers(Pageable pageable) {
+        logger.info("Buscando containers com paginação - Página: {}, Tamanho: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Container> containers = containerRepository.findAll(pageable);
+
+        logger.info("Encontrados {} containers na página {} de {} (Total: {})",
+                containers.getNumberOfElements(),
+                containers.getNumber() + 1,
+                containers.getTotalPages(),
+                containers.getTotalElements());
+
+        return containers;
+    }
+
+    public Page<Container> getContainersByOperation(Long operationId, Pageable pageable) {
+        logger.info("Buscando containers da operação {} - Página: {}, Tamanho: {}",
+                operationId, pageable.getPageNumber(), pageable.getPageSize());
+
+        Operation operation = operationRepository.findById(operationId)
+                .orElseThrow(() -> {
+                    logger.warn("Operação com ID {} não encontrada", operationId);
+                    return new OperationNotFoundException("Operação não encontrada com ID: " + operationId);
+                });
+
+        Page<Container> containers = containerRepository.findByOperation(operation, pageable);
+
+        logger.info("Encontrados {} containers da operação {} na página {} de {} (Total: {})",
+                containers.getNumberOfElements(), operationId,
+                containers.getNumber() + 1, containers.getTotalPages(),
+                containers.getTotalElements());
+
+        return containers;
+    }
+
+    public Page<Container> getContainersByStatus(ContainerStatus status, Pageable pageable) {
+        logger.info("Buscando containers com status {} - Página: {}, Tamanho: {}",
+                status, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Container> containers = containerRepository.findByStatus(status, pageable);
+
+        logger.info("Encontrados {} containers com status {} na página {} de {} (Total: {})",
+                containers.getNumberOfElements(), status,
+                containers.getNumber() + 1, containers.getTotalPages(),
+                containers.getTotalElements());
+
+        return containers;
     }
 
     @Transactional
@@ -94,25 +158,36 @@ public class ContainerService {
                         .orElseThrow(() -> new OperationNotFoundException(
                                 "Operação não encontrada: " + containerDTO.operationId()));
 
-                // Criar container usando metodo existente
+                // Sanitização dos campos de texto livre
+                String sanitizedContainerId = inputSanitizer.sanitizePlainText(containerDTO.containerId());
+                String sanitizedDescription = inputSanitizer.sanitizeBasicHtml(containerDTO.description());
+                String sanitizedAgencySeal = inputSanitizer.sanitizePlainText(containerDTO.agencySeal());
+                List<String> sanitizedOtherSeals = null;
+                if (containerDTO.otherSeals() != null) {
+                    sanitizedOtherSeals = containerDTO.otherSeals().stream()
+                        .map(inputSanitizer::sanitizePlainText)
+                        .toList();
+                }
+
+                // Criar container usando campos sanitizados
                 Container newContainer = new Container(
-                        containerDTO.containerId(),
-                        containerDTO.description(),
+                        sanitizedContainerId,
+                        sanitizedDescription,
                         user,
                         operation,
                         containerDTO.sacksCount(),
                         containerDTO.tareTons(),
                         containerDTO.liquidWeight(),
                         containerDTO.grossWeight(),
-                        containerDTO.agencySeal(),
-                        containerDTO.otherSeals(),
+                        sanitizedAgencySeal,
+                        sanitizedOtherSeals,
                         containerDTO.status() != null ? containerDTO.status() : ContainerStatus.PENDING
                 );
 
                 Container saved = containerRepository.save(newContainer);
                 createdContainers.add(saved);
 
-                logger.debug("Container {} criado com sucesso", containerDTO.containerId());
+                logger.debug("Container {} criado com sucesso", sanitizedContainerId);
 
             } catch (Exception e) {
                 // Em caso de erro, fazer rollback de toda a transação
@@ -251,9 +326,10 @@ public class ContainerService {
 
             // Atualizar apenas os campos enviados (não nulos)
             if (updateDTO.description() != null && !existingContainer.getDescription().equals(updateDTO.description())) {
-                existingContainer.setDescription(updateDTO.description());
+                String sanitizedDescription = inputSanitizer.sanitizeBasicHtml(updateDTO.description());
+                existingContainer.setDescription(sanitizedDescription);
                 changed = true;
-                logger.debug("Descrição atualizada para: {}", updateDTO.description());
+                logger.debug("Descrição atualizada para: {}", sanitizedDescription);
             }
 
             if (updateDTO.sacksCount() != null && existingContainer.getSacksCount() != updateDTO.sacksCount()) {
@@ -281,13 +357,17 @@ public class ContainerService {
             }
 
             if (updateDTO.agencySeal() != null && !existingContainer.getAgencySeal().equals(updateDTO.agencySeal())) {
-                existingContainer.setAgencySeal(updateDTO.agencySeal());
+                String sanitizedAgencySeal = inputSanitizer.sanitizePlainText(updateDTO.agencySeal());
+                existingContainer.setAgencySeal(sanitizedAgencySeal);
                 changed = true;
-                logger.debug("Lacre da agência atualizado para: {}", updateDTO.agencySeal());
+                logger.debug("Lacre da agência atualizado para: {}", sanitizedAgencySeal);
             }
 
             if (updateDTO.otherSeals() != null && !existingContainer.getOtherSeals().equals(updateDTO.otherSeals())) {
-                existingContainer.setOtherSeals(updateDTO.otherSeals());
+                List<String> sanitizedOtherSeals = updateDTO.otherSeals().stream()
+                    .map(inputSanitizer::sanitizePlainText)
+                    .toList();
+                existingContainer.setOtherSeals(sanitizedOtherSeals);
                 changed = true;
                 logger.debug("Outros lacres atualizados");
             }

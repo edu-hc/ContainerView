@@ -22,6 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -233,6 +237,96 @@ public class ContainerController {
             logger.error("Erro ao adicionar imagens ao container {}: {}", containerId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<Container>> getAllContainers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        logger.info("GET /containers - Página: {}, Tamanho: {}, Ordenação: {} {}. IP: {}",
+                page, size, sortBy, sortDirection, request.getRemoteAddr());
+
+        if (size > 100) {
+            size = 100;
+            logger.warn("Tamanho da página limitado a 100 itens");
+        }
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Container> containers = containerService.getContainers(pageable);
+
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /containers concluído. Página {} de {} ({} containers de {} total). Tempo: {}ms",
+                containers.getNumber() + 1, containers.getTotalPages(),
+                containers.getNumberOfElements(), containers.getTotalElements(), execTime);
+
+        return ResponseEntity.ok(containers);
+    }
+
+    @GetMapping("/by-operation/{operationId}")
+    public ResponseEntity<Page<Container>> getContainersByOperation(
+            @PathVariable Long operationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        logger.info("GET /containers/by-operation/{} - Página: {}, Tamanho: {}. IP: {}",
+                operationId, page, size, request.getRemoteAddr());
+
+        if (size > 100) {
+            size = 100;
+        }
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Container> containers = containerService.getContainersByOperation(operationId, pageable);
+
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /containers/by-operation/{} concluído. Página {} de {} ({} containers). Tempo: {}ms",
+                operationId, containers.getNumber() + 1, containers.getTotalPages(),
+                containers.getNumberOfElements(), execTime);
+
+        return ResponseEntity.ok(containers);
+    }
+
+    @GetMapping("/by-status/{status}")
+    public ResponseEntity<Page<Container>> getContainersByStatus(
+            @PathVariable ContainerStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        logger.info("GET /containers/by-status/{} - Página: {}, Tamanho: {}. IP: {}",
+                status, page, size, request.getRemoteAddr());
+
+        if (size > 100) {
+            size = 100;
+        }
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Container> containers = containerService.getContainersByStatus(status, pageable);
+
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("GET /containers/by-status/{} concluído. Página {} de {} ({} containers). Tempo: {}ms",
+                status, containers.getNumber() + 1, containers.getTotalPages(),
+                containers.getNumberOfElements(), execTime);
+
+        return ResponseEntity.ok(containers);
     }
 
     @PutMapping("/{containerId}")

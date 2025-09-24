@@ -1,11 +1,15 @@
 package com.ftc.containerView.service;
 
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
+import com.ftc.containerView.infra.security.InputSanitizer;
 import com.ftc.containerView.model.user.User;
+import com.ftc.containerView.model.user.UserRole;
 import com.ftc.containerView.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,15 +22,24 @@ public class UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
+    private final InputSanitizer inputSanitizer;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, InputSanitizer inputSanitizer) {
         this.userRepository = userRepository;
+        this.inputSanitizer = inputSanitizer;
     }
 
     public User saveUser(User user) {
         logger.info("Salvando novo usuário: {}", user.getCpf());
         try {
+            // Sanitização dos campos de texto livre
+            user.setFirstName(inputSanitizer.sanitizePlainText(user.getFirstName()));
+            user.setLastName(inputSanitizer.sanitizePlainText(user.getLastName()));
+            user.setEmail(inputSanitizer.sanitizePlainText(user.getEmail()));
+            user.setCpf(inputSanitizer.sanitizeDocument(user.getCpf()));
+            user.setPassword(inputSanitizer.sanitizePlainText(user.getPassword()));
+
             User saved = userRepository.save(user);
             logger.info("Usuário salvo com sucesso: {}", saved.getCpf());
             return saved;
@@ -36,12 +49,50 @@ public class UserService {
         }
     }
 
-    public List<User> getUsers() {
-        logger.info("Buscando todos os usuários.");
-        List<User> users = userRepository.findAll();
-        logger.info("Encontrados {} usuários.", users.size());
-        return users;
+    public User registerUser(User user) {
+        logger.info("Registrando novo usuário: {}", user.getCpf());
+        try {
+            // Sanitização dos campos de texto livre
+            user.setFirstName(inputSanitizer.sanitizePlainText(user.getFirstName()));
+            user.setLastName(inputSanitizer.sanitizePlainText(user.getLastName()));
 
+            User saved = userRepository.save(user);
+            logger.info("Usuário registrado com sucesso: {}", saved.getCpf());
+            return saved;
+        } catch (IllegalArgumentException e) {
+            logger.error("Erro ao registrar usuário: {}. Erro: {}", user.getCpf(), e.getMessage(), e);
+            throw new UserNotFoundException("Usuário nao encontrado com ID: " + user.getId());
+        }
+    }
+
+
+
+    public Page<User> getUsers(Pageable pageable) {
+        logger.info("Buscando usuários com paginação - Página: {}, Tamanho: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<User> users = userRepository.findAll(pageable);
+
+        logger.info("Encontrados {} usuários na página {} de {}",
+                users.getNumberOfElements(),
+                users.getNumber() + 1,
+                users.getTotalPages());
+
+        return users;
+    }
+
+    public Page<User> getUsersByRole(UserRole role, Pageable pageable) {
+        logger.info("Buscando usuários com role {} - Página: {}, Tamanho: {}",
+                role, pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<User> users = userRepository.findByRole(role, pageable);
+
+        logger.info("Encontrados {} usuários com role {} na página {} de {} (Total: {})",
+                users.getNumberOfElements(), role,
+                users.getNumber() + 1, users.getTotalPages(),
+                users.getTotalElements());
+
+        return users;
     }
 
     public User getUsersById(Long id) {
@@ -119,4 +170,6 @@ public class UserService {
             throw e;
         }
     }
+
+
 }

@@ -2,7 +2,10 @@ package com.ftc.containerView.repositories;
 
 import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.model.operation.Operation;
+import com.ftc.containerView.model.operation.OperationStatus;
 import com.ftc.containerView.model.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,5 +23,10 @@ public interface OperationRepository extends JpaRepository<Operation, Long> {
     List<Operation> findByCreatedAtBefore(LocalDateTime createdAt);
     List<Operation> findByCreatedAtAfter(LocalDateTime createdAt);
     List<Operation> findByCreatedAtBetween(LocalDateTime createdAt1, LocalDateTime createdAt2);
+
+    Page<Operation> findByUser(User user, Pageable pageable);
+    Page<Operation> findByStatus(OperationStatus status, Pageable pageable);
+    long countByUser(User user);
+    long countByStatus(OperationStatus status);
 
 }
