@@ -43,6 +43,9 @@ public class User {
     @Column(name = "two_factor_enabled", nullable = false)
     private boolean twoFactorEnabled;
 
+    @Column(name = "totp_secret", length = 64)
+    private String totpSecret;
+
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Operation> operations = new ArrayList<>();

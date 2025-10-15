@@ -4,7 +4,7 @@ import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundExceptio
 import com.ftc.containerView.infra.security.auth.TempTokenService;
 import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.infra.security.auth.UserContextService;
-import com.ftc.containerView.infra.security.auth.email.EmailService;
+import com.ftc.containerView.infra.security.auth.totp.TotpService;
 import com.ftc.containerView.model.auth.*;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.model.user.UserDTO;
@@ -32,90 +32,213 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TempTokenService tempTokenService;
-    private final EmailService emailService;
+    private final TotpService totpService; // NOVO: Substituiu EmailService
     private final TokenService tokenService;
     private final UserContextService userContextService;
     private final UserService userService;
 
+    /**
+     * Login com suporte a 2FA via TOTP
+     */
     @PostMapping("/login")
-    public ResponseEntity login (@Valid @RequestBody LoginDTO login, HttpServletRequest request) {
+    public ResponseEntity login(@Valid @RequestBody LoginDTO login, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("POST /auth/login - Tentando autenticar usuário com CPF: {}. IP: {}", login.cpf(), request.getRemoteAddr());
+
         User user = userRepository.findByCpf(login.cpf())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        if(passwordEncoder.matches(login.password(), user.getPassword())) {
+
+        if (passwordEncoder.matches(login.password(), user.getPassword())) {
             logger.info("Usuário autenticado com sucesso: {}", user.getCpf());
-            if(user.isTwoFactorEnabled()) {
+
+            // Se 2FA está habilitado, retorna token temporário
+            if (user.isTwoFactorEnabled()) {
                 logger.info("2FA habilitado para o usuário: {}", user.getCpf());
-                String token = tempTokenService.generateTempToken(user);
-                emailService.sendVerificationCode(user);
+
+                // Verifica se usuário já configurou TOTP
+                if (user.getTotpSecret() == null || user.getTotpSecret().isBlank()) {
+                    logger.warn("Usuário {} tem 2FA habilitado mas não configurou TOTP ainda", user.getCpf());
+                    return ResponseEntity.badRequest()
+                            .body("2FA habilitado mas não configurado. Configure primeiro em /auth/2fa/setup");
+                }
+
+                String tempToken = tempTokenService.generateTempToken(user);
                 long execTime = System.currentTimeMillis() - startTime;
-                logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
-                return ResponseEntity.ok(new Login2FAResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
+                logger.info("POST /auth/login concluído (2FA pendente) para usuário: {}. Tempo: {}ms", user.getCpf(), execTime);
+
+                return ResponseEntity.ok(new Login2FAResponseDTO(user.getCpf(), true, tempToken));
             }
+
+            // Login sem 2FA
             String token = tokenService.generateToken(user);
             long execTime = System.currentTimeMillis() - startTime;
-            logger.info("POST /auth/login concluído para usuário: {}. Tempo de resposta: {}ms", user.getCpf(), execTime);
-            return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), user.isTwoFactorEnabled(), token));
+            logger.info("POST /auth/login concluído para usuário: {}. Tempo: {}ms", user.getCpf(), execTime);
+
+            return ResponseEntity.ok(new LoginResponseDTO(user.getCpf(), false, token));
         }
+
         logger.warn("Falha na autenticação para CPF: {}", login.cpf());
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.status(401).body("Credenciais inválidas");
     }
 
+    /**
+     * Verifica código TOTP e completa autenticação
+     */
     @PostMapping("/verify")
-    public ResponseEntity<TwoFAResponseDTO> verify(@Valid @RequestBody VerifyCodeDTO verifyCodeDTO, HttpServletRequest request) {
+    public ResponseEntity<TwoFAResponseDTO> verify(@Valid @RequestBody VerifyTotpDTO verifyTotpDTO, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
-        logger.info("POST /auth/verify - Verificando código 2FA para token temporário. IP: {}", request.getRemoteAddr());
+        logger.info("POST /auth/verify - Verificando código TOTP. IP: {}", request.getRemoteAddr());
+
         String userCpf = userContextService.getCurrentUser().getCpf();
         if (userCpf.isEmpty()) {
-            logger.warn("Token temporário inválido na verificação 2FA");
+            logger.warn("Token temporário inválido na verificação TOTP");
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Verifica se usuário tem TOTP configurado
+        if (user.getTotpSecret() == null || user.getTotpSecret().isBlank()) {
+            logger.error("Usuário {} não tem TOTP secret configurado", userCpf);
             return ResponseEntity.badRequest().build();
         }
-        if (emailService.verifyCode(userCpf, verifyCodeDTO.code())) {
-            logger.info("Código 2FA válido para usuário: {}", userCpf);
-            User user = userRepository.findByCpf(userCpf)
-                    .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        // Verifica código TOTP
+        if (totpService.verifyCode(user.getTotpSecret(), verifyTotpDTO.code())) {
+            logger.info("Código TOTP válido para usuário: {}", userCpf);
+
             String token = tokenService.generateToken(user);
             long execTime = System.currentTimeMillis() - startTime;
-            logger.info("POST /auth/verify concluído para usuário: {}. Tempo de resposta: {}ms", userCpf, execTime);
+            logger.info("POST /auth/verify concluído para usuário: {}. Tempo: {}ms", userCpf, execTime);
+
             return ResponseEntity.ok(new TwoFAResponseDTO(user.getCpf(), token, "authenticated"));
         }
-        logger.warn("Código 2FA inválido para usuário: {}", userCpf);
-        return ResponseEntity.badRequest().build();
+
+        logger.warn("Código TOTP inválido para usuário: {}", userCpf);
+        return ResponseEntity.status(401).body(new TwoFAResponseDTO(userCpf, null, "invalid_code"));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity register (@Valid @RequestBody UserDTO register, HttpServletRequest request) {
-        long startTime = System.currentTimeMillis();
-        logger.info("POST /auth/register - Tentando registrar usuário com CPF: {}. IP: {}", register.cpf(), request.getRemoteAddr());
-        Optional<User> user = userRepository.findByCpf(register.cpf());
-        if (user.isEmpty()) {
-            User newUser = new User(register.firstName(),
-                    register.lastName(),
-                    register.cpf(),
-                    register.email(),
-                    passwordEncoder.encode(register.password()),
-                    register.role(),
-                    register.twoFactorEnabled());
-            User savedUser = userService.registerUser(newUser);
-            long execTime = System.currentTimeMillis() - startTime;
-            logger.info("Usuário registrado com sucesso: {}. Tempo de resposta: {}ms", savedUser.getCpf(), execTime);
-            return ResponseEntity.ok(savedUser);
+    /**
+     * Setup inicial do TOTP - gera QR code
+     * Requer autenticação (usuário já logado)
+     */
+    @PostMapping("/2fa/setup")
+    public ResponseEntity<TotpSetupResponseDTO> setup2FA(HttpServletRequest request) {
+        logger.info("POST /auth/2fa/setup - Configurando TOTP. IP: {}", request.getRemoteAddr());
+
+        String userCpf = userContextService.getCurrentUser().getCpf();
+        if (userCpf.isEmpty()) {
+            logger.warn("Tentativa de setup 2FA sem autenticação");
+            return ResponseEntity.status(401).build();
         }
-        logger.warn("Tentativa de registro para CPF já existente: {}", register.cpf());
-        return ResponseEntity.badRequest().build();
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Gera novo secret TOTP
+        String secret = totpService.generateSecret();
+        user.setTotpSecret(secret);
+        user.setTwoFactorEnabled(true); // Habilita 2FA automaticamente
+        userRepository.save(user);
+
+        // Gera QR Code
+        String qrCodeDataUri = totpService.generateQrCodeDataUri(secret, user.getEmail());
+
+        logger.info("TOTP configurado com sucesso para usuário: {}", userCpf);
+
+        return ResponseEntity.ok(new TotpSetupResponseDTO(
+                secret,
+                qrCodeDataUri,
+                "Escaneie o QR Code com seu aplicativo Authenticator"
+        ));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<UserMeDTO> me() {
+    /**
+     * Desabilita 2FA (requer código TOTP atual para segurança)
+     */
+    @PostMapping("/2fa/disable")
+    public ResponseEntity<?> disable2FA(@Valid @RequestBody VerifyTotpDTO verifyTotpDTO, HttpServletRequest request) {
+        logger.info("POST /auth/2fa/disable - Desabilitando TOTP. IP: {}", request.getRemoteAddr());
 
-        UserMeDTO user = new UserMeDTO(userContextService.getCurrentUser().getId(),
-                userContextService.getCurrentUser().getCpf(),
-                userContextService.getCurrentUser().getFirstName(),
-                userContextService.getCurrentUser().getLastName(),
-                userContextService.getCurrentUser().getEmail(),
-                userContextService.getCurrentUser().getRole(),
-                userContextService.getCurrentUser().isTwoFactorEnabled());
-        return ResponseEntity.ok(user);
+        String userCpf = userContextService.getCurrentUser().getCpf();
+        if (userCpf.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Verifica código TOTP antes de desabilitar (segurança)
+        if (!totpService.verifyCode(user.getTotpSecret(), verifyTotpDTO.code())) {
+            logger.warn("Tentativa de desabilitar 2FA com código inválido para usuário: {}", userCpf);
+            return ResponseEntity.status(401).body("Código TOTP inválido");
+        }
+
+        user.setTwoFactorEnabled(false);
+        user.setTotpSecret(null); // Remove secret por segurança
+        userRepository.save(user);
+
+        logger.info("2FA desabilitado com sucesso para usuário: {}", userCpf);
+        return ResponseEntity.ok("2FA desabilitado com sucesso");
+    }
+
+    /**
+     * Registro de novo usuário
+     */
+    @PostMapping("/register")
+    public ResponseEntity register(@Valid @RequestBody UserDTO register, HttpServletRequest request) {
+        long startTime = System.currentTimeMillis();
+        logger.info("POST /auth/register - Registrando usuário com CPF: {}. IP: {}", register.cpf(), request.getRemoteAddr());
+
+        Optional<User> existingUser = userRepository.findByCpf(register.cpf());
+        if (existingUser.isPresent()) {
+            logger.warn("Tentativa de registro com CPF já existente: {}", register.cpf());
+            return ResponseEntity.badRequest().body("CPF já cadastrado");
+        }
+
+        User newUser = new User(
+                register.firstName(),
+                register.lastName(),
+                register.cpf(),
+                register.email(),
+                passwordEncoder.encode(register.password()),
+                register.role(),
+                register.twoFactorEnabled()
+        );
+
+        User savedUser = userService.registerUser(newUser);
+        long execTime = System.currentTimeMillis() - startTime;
+        logger.info("Usuário registrado com sucesso: {}. Tempo: {}ms", savedUser.getCpf(), execTime);
+
+        return ResponseEntity.ok("Usuário registrado com sucesso");
+    }
+
+    /**
+     * Endpoint para obter informações do usuário logado
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDTO> me(HttpServletRequest request) {
+        logger.info("GET /auth/me - Obtendo informações do usuário logado. IP: {}", request.getRemoteAddr());
+
+        String userCpf = userContextService.getCurrentUser().getCpf();
+        if (userCpf.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        UserMeDTO userMeDTO = new UserMeDTO(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getCpf(),
+                user.getEmail(),
+                user.getRole(),
+                user.isTwoFactorEnabled()
+        );
+
+        return ResponseEntity.ok(userMeDTO);
     }
 }
