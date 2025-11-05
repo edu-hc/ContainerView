@@ -7,8 +7,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EB_APPLICATION: ContainerView
-  EB_ENVIRONMENT: ContainerView-production
+  EB_APPLICATION: ContainerView-prod
+  EB_ENVIRONMENT: ContainerView-prod-env
 
 jobs:
   test:
@@ -51,12 +51,8 @@ jobs:
       - name: Prepare deployment
         run: |
           cd back-end
-          mkdir -p deploy
           cp target/*.jar deploy/application.jar
           echo "web: java -jar application.jar" > deploy/Procfile
-          
-          # Copiar todos os ebextensions
-          cp -r .ebextensions deploy/
           
           # Criar ZIP
           cd deploy
