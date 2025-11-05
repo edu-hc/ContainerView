@@ -50,12 +50,28 @@ jobs:
           
       - name: Prepare deployment
         run: |
+          # Copiar JAR
           cp back-end/target/*.jar deploy/application.jar
-          echo "web: java -jar application.jar" > deploy/Procfile
+          
+          # Copiar Procfile correto
+          cp Procfile deploy/Procfile
+          
+          # Debug - verificar o que foi copiado
+          echo "📦 Arquivos no deploy:"
+          ls -lh deploy/
+          echo ""
+          echo "📄 Conteúdo do Procfile:"
+          cat deploy/Procfile
           
           # Criar ZIP
-          mkdir -p deploy/zip
-          zip -r deploy/zip/deploy.zip .
+          cd deploy
+          zip -r ../deploy.zip .
+          cd ..
+          
+          # Verificar ZIP
+          echo ""
+          echo "📦 Conteúdo do ZIP:"
+          unzip -l deploy.zip
           
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -73,5 +89,5 @@ jobs:
           environment_name: ${{ env.EB_ENVIRONMENT }}
           version_label: v${{ github.run_number }}
           region: ${{ env.AWS_REGION }}
-          deployment_package: deploy/zip/deploy.zip
+          deployment_package: deploy.zip
           wait_for_deployment: true
