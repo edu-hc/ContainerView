@@ -50,8 +50,7 @@ jobs:
           
       - name: Prepare deployment
         run: |
-          cd back-end
-          cp target/*.jar deploy/application.jar
+          cp back-end/target/*.jar deploy/application.jar
           echo "web: java -jar application.jar" > deploy/Procfile
           
           # Criar ZIP
