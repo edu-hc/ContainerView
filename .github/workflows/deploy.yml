@@ -54,8 +54,8 @@ jobs:
           echo "web: java -jar application.jar" > deploy/Procfile
           
           # Criar ZIP
-          cd deploy
-          zip -r deploy.zip .
+          mkdir -p deploy/zip
+          zip -r deploy/zip/deploy.zip .
           
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -73,5 +73,5 @@ jobs:
           environment_name: ${{ env.EB_ENVIRONMENT }}
           version_label: v${{ github.run_number }}
           region: ${{ env.AWS_REGION }}
-          deployment_package: deploy/deploy.zip
+          deployment_package: deploy/zip/deploy.zip
           wait_for_deployment: true
