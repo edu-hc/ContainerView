@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: us-east-1
   EB_APPLICATION: ContainerView-prod
-  EB_ENVIRONMENT: ContainerView-prod-env
+  EB_ENVIRONMENT: ContainerView-production-env
 
 jobs:
   test:
