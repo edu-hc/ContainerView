@@ -41,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/verify").hasRole("TEMPORARY")
                         .requestMatchers(HttpMethod.POST, "/auth/2fa/setup").hasRole("TEMPORARY")
                         .requestMatchers(HttpMethod.POST, "/auth/register").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/auth/2fa/setup").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/auth/2fa/disable").hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
                         .anyRequest().hasRole("INSPETOR")
                 )
