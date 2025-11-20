@@ -6,9 +6,7 @@ import com.ftc.containerView.infra.security.auth.TokenService;
 import com.ftc.containerView.infra.security.auth.UserContextService;
 import com.ftc.containerView.infra.security.auth.totp.TotpService;
 import com.ftc.containerView.model.auth.*;
-import com.ftc.containerView.model.user.User;
-import com.ftc.containerView.model.user.UserDTO;
-import com.ftc.containerView.model.user.UserMeDTO;
+import com.ftc.containerView.model.user.*;
 import com.ftc.containerView.repositories.UserRepository;
 import com.ftc.containerView.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -154,6 +152,31 @@ public class AuthController {
         ));
     }
 
+    @PostMapping("/2fa/setup/{userCpf}")
+    public ResponseEntity<TotpSetupResponseDTO> setupUser2FA(@PathVariable String userCpf, HttpServletRequest request) {
+        logger.info("POST /auth/2fa/setup - Configurando TOTP. IP: {}", request.getRemoteAddr());
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
+
+        // Gera novo secret TOTP
+        String secret = totpService.generateSecret();
+        user.setTotpSecret(secret);
+        user.setTwoFactorEnabled(true); // Habilita 2FA automaticamente
+        userRepository.save(user);
+
+        // Gera QR Code
+        String qrCodeDataUri = totpService.generateQrCodeDataUri(secret, user.getEmail());
+
+        logger.info("TOTP configurado com sucesso para usuário: {}", userCpf);
+
+        return ResponseEntity.ok(new TotpSetupResponseDTO(
+                secret,
+                qrCodeDataUri,
+                "Escaneie o QR Code com seu aplicativo Authenticator"
+        ));
+    }
+
     /**
      * Desabilita 2FA (requer código TOTP atual para segurança)
      */
@@ -174,6 +197,21 @@ public class AuthController {
             logger.warn("Tentativa de desabilitar 2FA com código inválido para usuário: {}", userCpf);
             return ResponseEntity.status(401).body("Código TOTP inválido");
         }
+
+        user.setTwoFactorEnabled(false);
+        user.setTotpSecret(null); // Remove secret por segurança
+        userRepository.save(user);
+
+        logger.info("2FA desabilitado com sucesso para usuário: {}", userCpf);
+        return ResponseEntity.ok("2FA desabilitado com sucesso");
+    }
+
+    @PostMapping("/2fa/disable/{userCpf}")
+    public ResponseEntity<?> disableUser2FA(@PathVariable String userCpf, HttpServletRequest request) {
+        logger.info("POST /auth/2fa/disable - Desabilitando TOTP. IP: {}", request.getRemoteAddr());
+
+        User user = userRepository.findByCpf(userCpf)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         user.setTwoFactorEnabled(false);
         user.setTotpSecret(null); // Remove secret por segurança
@@ -207,11 +245,30 @@ public class AuthController {
                 register.twoFactorEnabled()
         );
 
+        String totpSecret = null;
+        String qrCodeDataUri = null;
+
+        if (register.twoFactorEnabled()) {
+            totpSecret = totpService.generateSecret();
+            newUser.setTotpSecret(totpSecret);
+            qrCodeDataUri = totpService.generateQrCodeDataUri(totpSecret, newUser.getEmail());
+            logger.info("TOTP gerado automaticamente para novo usuário: {}", register.cpf());
+        }
+
         User savedUser = userService.registerUser(newUser);
         long execTime = System.currentTimeMillis() - startTime;
         logger.info("Usuário registrado com sucesso: {}. Tempo: {}ms", savedUser.getCpf(), execTime);
 
-        return ResponseEntity.ok("Usuário registrado com sucesso");
+        if (register.twoFactorEnabled()) {
+            return ResponseEntity.ok(new UserRegistration2faResponseDTO(
+                    "Usuário registrado com sucesso",
+                    savedUser.getCpf(),
+                    totpSecret,
+                    qrCodeDataUri
+            ));
+        }
+
+        return ResponseEntity.ok(new UserRegistrationResponseDTO("Usuário registrado com sucesso", savedUser.getCpf()));
     }
 
     /**

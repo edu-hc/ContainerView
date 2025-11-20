@@ -21,7 +21,8 @@ public record UserDTO(
         String password,
         @NotNull(message = "Função é obrigatória")
         UserRole role,
-        boolean twoFactorEnabled) {
+        @NotNull(message = "Configuração de autenticação de dois fatores é obrigatória")
+        boolean twoFactorEnabled){
 
 
 }

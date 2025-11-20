@@ -50,18 +50,18 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Operation> operations = new ArrayList<>();
 
-    public User(String fistName, String lastName, String cpf, String email, String password, UserRole role) {
-        this.firstName = fistName;
+    public User(String firstName, String lastName, String cpf, String email, String password, UserRole role) {
+        this.firstName = firstName;
         this.lastName = lastName;
         this.cpf = cpf;
         this.email = email;
         this.password = password;
         this.role = role;
-        this.twoFactorEnabled = true;
+        this.twoFactorEnabled = false;
     }
 
-    public User(String fistName, String lastName, String cpf, String email, String password, UserRole role, boolean twoFactorEnabled) {
-        this.firstName = fistName;
+    public User(String firstName, String lastName, String cpf, String email, String password, UserRole role, boolean twoFactorEnabled) {
+        this.firstName = firstName;
         this.lastName = lastName;
         this.cpf = cpf;
         this.email = email;
