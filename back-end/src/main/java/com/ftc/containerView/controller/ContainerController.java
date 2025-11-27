@@ -53,7 +53,7 @@ public class ContainerController {
         this.containerImageService = containerImageService;
     }
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping
     public ResponseEntity<Container> createContainer(@RequestBody ContainerRequestDTO containerRequestDTO,
                                                      HttpServletRequest request) {
 
