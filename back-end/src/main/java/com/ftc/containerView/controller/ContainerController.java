@@ -3,10 +3,7 @@ package com.ftc.containerView.controller;
 import com.ftc.containerView.infra.aws.S3Service;
 import com.ftc.containerView.infra.errorhandling.exceptions.ContainerNotFoundException;
 import com.ftc.containerView.infra.security.auth.UserContextService;
-import com.ftc.containerView.model.container.Container;
-import com.ftc.containerView.model.container.ContainerStatus;
-import com.ftc.containerView.model.container.CreateContainerDTO;
-import com.ftc.containerView.model.container.UpdateContainerDTO;
+import com.ftc.containerView.model.container.*;
 import com.ftc.containerView.model.images.AddImagesToContainerResultDTO;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
@@ -57,27 +54,19 @@ public class ContainerController {
     }
 
     @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<Container> createContainer(@RequestParam("containerId") String containerId,
-                                                     @RequestParam("description") String description,
-                                                     @RequestParam("operationId") Long operationId,
-                                                     @RequestParam("sacksCount") int sacksCount,
-                                                     @RequestParam("tareTons") float tareTons,
-                                                     @RequestParam("liquidWeight") float liquidWeight,
-                                                     @RequestParam("grossWeight") float grossWeight,
-                                                     @RequestParam("agencySeal") String agencySeal,
-                                                     @RequestParam("otherSeals") List<String> otherSeals,
+    public ResponseEntity<Container> createContainer(@RequestBody ContainerRequestDTO containerRequestDTO,
                                                      HttpServletRequest request) {
 
         Long userId = userContextService.getCurrentUserId();
 
         logger.info("POST /containers - Criando novo container. ContainerId: {}, UserId: {}, IP: {}",
-                containerId, userId, request.getRemoteAddr());
+                containerRequestDTO.containerId(), userId, request.getRemoteAddr());
 
 
         long startTime = System.currentTimeMillis();
 
-        CreateContainerDTO containerDTO = new CreateContainerDTO(containerId, description, new ArrayList<>(), userId, operationId,
-                sacksCount, tareTons, liquidWeight, grossWeight, agencySeal, otherSeals, ContainerStatus.OPEN);
+        CreateContainerDTO containerDTO = new CreateContainerDTO(containerRequestDTO.containerId(), containerRequestDTO.description(), new ArrayList<>(), userId, containerRequestDTO.operationId(),
+                containerRequestDTO.sacksCount(), containerRequestDTO.tareTons(), containerRequestDTO.liquidWeight(), containerRequestDTO.grossWeight(), containerRequestDTO.agencySeal(), containerRequestDTO.otherSeals(), ContainerStatus.OPEN);
 
         Container newContainer = containerService.createContainer(containerDTO);
 
