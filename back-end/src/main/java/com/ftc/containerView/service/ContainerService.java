@@ -497,7 +497,7 @@ public class ContainerService {
                         containerDTO.grossWeight(),
                         sanitizedAgencySeal,
                         sanitizedOtherSeals,
-                        containerDTO.status() != null ? containerDTO.status() : ContainerStatus.PENDING
+                        containerDTO.status() != null ? containerDTO.status() : ContainerStatus.OPEN
                 );
 
                 Container saved = containerRepository.save(newContainer);
@@ -593,6 +593,7 @@ public class ContainerService {
 
         // Adicionar novas imagens ao container
         container.getContainerImages().addAll(newImages);
+        container.setStatus(ContainerStatus.PENDING);
         Container updatedContainer = containerRepository.save(container);
 
         logger.info("Total de {} imagens adicionadas ao container ID: {}",
