@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ContainerRepository extends JpaRepository<Container, String> {
+public interface ContainerRepository extends JpaRepository<Container, Long> {
 
     Optional<Container> findById(long id);
 

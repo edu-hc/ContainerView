@@ -489,7 +489,7 @@ public class ContainerController {
     public ResponseEntity<Void> deleteContainer(@PathVariable String containerId, HttpServletRequest request) {
         long startTime = System.currentTimeMillis();
         logger.info("DELETE /containers/{} - Excluindo container. IP: {}", containerId, request.getRemoteAddr());
-        containerService.deleteContainer(containerId);
+        containerService.deleteContainerByContainerId(containerId);
         long execTime = System.currentTimeMillis() - startTime;
         logger.info("Container com ID {} excluído com sucesso. Tempo de resposta: {}ms", containerId, execTime);
         return ResponseEntity.noContent().build();

@@ -278,7 +278,7 @@ public class ContainerService {
     /**
      * Busca container por ID
      */
-    public Container getContainersById(String id) {
+    public Container getContainersById(Long id) {
         logger.info("Buscando container por ID: {}", id);
         Optional<Container> container = containerRepository.findById(id);
         if (container.isPresent()) {
@@ -348,17 +348,19 @@ public class ContainerService {
     /**
      * Deleta um container por ID
      */
-    public void deleteContainer(String id) {
-        logger.info("Excluindo container com ID: {}", id);
+    public void deleteContainerByContainerId(String containerId) {
+        logger.info("Excluindo container com ID: {}", containerId);
         try {
-            if (!containerRepository.existsById(id)) {
-                logger.warn("Container com ID {} não encontrado.", id);
-                throw new ContainerNotFoundException("Container não encontrado com ID: " + id);
+            if (!containerRepository.existsByContainerId(containerId)) {
+                logger.warn("Container com ID {} não encontrado.", containerId);
+                throw new ContainerNotFoundException("Container não encontrado com ID: " + containerId);
             }
-            containerRepository.deleteById(id);
-            logger.info("Container com ID {} excluído com sucesso.", id);
+
+            Container containerDelete = containerRepository.findByContainerId(containerId).get();
+            containerRepository.deleteById(containerDelete.getId());
+            logger.info("Container com ID {} excluído com sucesso.", containerId);
         } catch (Exception e) {
-            logger.error("Erro ao excluir container com ID: {}. Erro: {}", id, e.getMessage(), e);
+            logger.error("Erro ao excluir container com ID: {}. Erro: {}", containerId, e.getMessage(), e);
             throw e;
         }
     }
