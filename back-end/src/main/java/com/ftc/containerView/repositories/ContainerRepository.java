@@ -22,4 +22,6 @@ public interface ContainerRepository extends JpaRepository<Container, String> {
 
     long countByOperation(Operation operation);
     long countByStatus(ContainerStatus status);
+
+    boolean existsByContainerId(String containerId);
 }
