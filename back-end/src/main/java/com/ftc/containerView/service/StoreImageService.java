@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class StoreImageService {
@@ -51,7 +52,8 @@ public class StoreImageService {
         }
 
         for (MultipartFile image : images) {
-            String fileName = "containerImage_" + imageCount++ + "_" + category + "_" + containerIdDef + ".jpg";
+            String uniqueId = UUID.randomUUID().toString();
+            String fileName = "containerImage_" + uniqueId + "_" + category + "_" + containerIdDef + ".jpg";
 
             imageValidationService.validateImage(image);
 
