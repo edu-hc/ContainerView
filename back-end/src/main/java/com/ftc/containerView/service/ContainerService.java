@@ -7,6 +7,7 @@ import com.ftc.containerView.model.images.AddImagesToContainerResultDTO;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
 import com.ftc.containerView.model.operation.Operation;
+import com.ftc.containerView.model.operation.OperationStatus;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.ContainerRepository;
 import com.ftc.containerView.repositories.OperationRepository;
@@ -169,6 +170,8 @@ public class ContainerService {
                         logger.warn("Container não encontrado com ID: {}", containerId);
                         return new ContainerNotFoundException("Container não encontrado com ID: " + containerId);
                     });
+
+            validateContainerCanBeEdited(existingContainer);
 
             // Verificar se o usuário tem permissão para atualizar (opcional)
             User user = userRepository.findById(userId)
@@ -351,14 +354,16 @@ public class ContainerService {
     public void deleteContainerByContainerId(String containerId) {
         logger.info("Excluindo container com ID: {}", containerId);
         try {
-            if (!containerRepository.existsByContainerId(containerId)) {
-                logger.warn("Container com ID {} não encontrado.", containerId);
-                throw new ContainerNotFoundException("Container não encontrado com ID: " + containerId);
-            }
 
-            Container containerDelete = containerRepository.findByContainerId(containerId).get();
-            containerRepository.deleteById(containerDelete.getId());
+            Container containerToDelete = containerRepository.findByContainerId(containerId).orElseThrow(
+                    () -> new ContainerNotFoundException("Container não encontrado com ID: " + containerId)
+            );
+
+            containerRepository.deleteById(containerToDelete.getId());
             logger.info("Container com ID {} excluído com sucesso.", containerId);
+
+        } catch (ContainerNotFoundException e) {
+            logger.warn("Container não encontrado com ID: " + containerId);
         } catch (Exception e) {
             logger.error("Erro ao excluir container com ID: {}. Erro: {}", containerId, e.getMessage(), e);
             throw e;
@@ -390,6 +395,52 @@ public class ContainerService {
         logger.info("Status do container com ID {} atualizado para FINALIZADO.", containerId);
 
         return containerRepository.save(container);
+    }
+
+    @Transactional
+    public Container reopenContainer(String containerId, Long userId) {
+        logger.info("Reabrindo container com ID: {} por usuário ID: {}", containerId, userId);
+
+        // Buscar o container
+        Container container = containerRepository.findByContainerId(containerId)
+                .orElseThrow(() -> {
+                    logger.error("Container não encontrado: {}", containerId);
+                    return new ContainerNotFoundException("Container não encontrado com ID: " + containerId);
+                });
+
+        // Validar se o container está COMPLETED
+        if (container.getStatus() != ContainerStatus.COMPLETED) {
+            logger.error("Container {} não está finalizado. Status atual: {}", containerId, container.getStatus());
+            throw new IllegalStateException(
+                    String.format("Container %s não está finalizado. Status atual: %s", containerId, container.getStatus())
+            );
+        }
+
+        // Validar se a operação pai NÃO está COMPLETED
+        Operation operation = container.getOperation();
+        if (operation != null && operation.getStatus() == OperationStatus.COMPLETED) {
+            logger.error("Não é possível reabrir container de operação finalizada. Container: {}, Operation: {}",
+                    containerId, operation.getId());
+            throw new EntityAlreadyCompletedException(
+                    String.format("Operação %d está finalizada. Para reabrir o container, reabra a operação primeiro", operation.getId())
+            );
+        }
+
+        // Verificar permissões do usuário (opcional)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + userId));
+
+        // Alterar status para PENDING
+        ContainerStatus previousStatus = container.getStatus();
+        container.setStatus(ContainerStatus.PENDING);
+
+        // Salvar (JPA Auditing irá registrar updatedAt e updatedByCpf automaticamente)
+        Container savedContainer = containerRepository.save(container);
+
+        logger.info("Container {} reaberto com sucesso. Status: {} → {}. Reaberto por userId: {}",
+                containerId, previousStatus, ContainerStatus.PENDING, userId);
+
+        return savedContainer;
     }
 
     /**
@@ -536,6 +587,8 @@ public class ContainerService {
         logger.info("Adicionando imagens ao container ID: {} por usuário ID: {}",
                 container.getContainerId(), userId);
 
+        validateContainerCanBeEdited(container);
+
         // Verificar permissões (opcional)
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + userId));
@@ -606,5 +659,36 @@ public class ContainerService {
                 newImages.size(),
                 imagesByCategory
         );
+    }
+
+    public void validateContainerCanBeEdited(Container container) {
+        logger.debug("Validando se container {} pode ser editado", container.getContainerId());
+
+        // Validar se o container está COMPLETED
+        if (container.getStatus() == ContainerStatus.COMPLETED) {
+            logger.error("Tentativa de editar container finalizado: {}", container.getContainerId());
+            throw new EntityAlreadyCompletedException(
+                    String.format("Container %s está finalizado e não pode ser editado", container.getContainerId())
+            );
+        }
+
+        // Validar se a operação está COMPLETED
+        Operation operation = container.getOperation();
+        if (operation != null && operation.getStatus() == OperationStatus.COMPLETED) {
+            logger.error("Tentativa de editar container de operação finalizada. Container: {}, Operation: {}",
+                    container.getContainerId(), operation.getId());
+            throw new EntityAlreadyCompletedException(
+                    String.format("Operação %d está finalizada. Não é possível editar seus containers", operation.getId())
+            );
+        }
+
+        logger.debug("Container {} pode ser editado", container.getContainerId());
+    }
+
+    private void validateContainerCanBeEdited(String containerId) {
+        Container container = containerRepository.findByContainerId(containerId)
+                .orElseThrow(() -> new ContainerNotFoundException("Container não encontrado com ID: " + containerId));
+
+        validateContainerCanBeEdited(container);
     }
 }

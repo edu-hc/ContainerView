@@ -1,10 +1,7 @@
 package com.ftc.containerView.service;
 
 import com.ftc.containerView.infra.aws.S3Service;
-import com.ftc.containerView.infra.errorhandling.exceptions.ContainerNotFoundException;
-import com.ftc.containerView.infra.errorhandling.exceptions.ImageNotFoundException;
-import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
-import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
+import com.ftc.containerView.infra.errorhandling.exceptions.*;
 import com.ftc.containerView.infra.security.InputSanitizer;
 import com.ftc.containerView.model.container.ContainerStatus;
 import com.ftc.containerView.model.images.AddSackImagesResultDTO;
@@ -45,15 +42,17 @@ public class OperationService {
     private final SackImageRepository sackImageRepository;
     private final StoreImageService storeImageService;
     private final InputSanitizer inputSanitizer;
+    private final ContainerRepository containerRepository;
 
     @Autowired
-    public OperationService(OperationRepository operationRepository, UserRepository userRepository, S3Service s3Service, ContainerRepository containerRepository, ContainerService containerService, SackImageRepository sackImageRepository, StoreImageService storeImageService, InputSanitizer inputSanitizer) {
+    public OperationService(OperationRepository operationRepository, UserRepository userRepository, S3Service s3Service, ContainerRepository containerRepository, ContainerService containerService, SackImageRepository sackImageRepository, StoreImageService storeImageService, InputSanitizer inputSanitizer, ContainerRepository containerRepository1) {
         this.operationRepository = operationRepository;
         this.userRepository = userRepository;
         this.s3Service = s3Service;
         this.sackImageRepository = sackImageRepository;
         this.storeImageService = storeImageService;
         this.inputSanitizer = inputSanitizer;
+        this.containerRepository = containerRepository1;
         logger.info("OperationService inicializado com sucesso");
     }
 
@@ -132,6 +131,8 @@ public class OperationService {
                         logger.warn("Operação com ID {} não encontrada.", operationId);
                         return new OperationNotFoundException("Operação não encontrada com ID: " + operationId);
                     });
+
+            validateOperationCanBeEdited(existingOperation);
 
             // Verificar se o usuário tem permissão para atualizar
             User user = userRepository.findById(userId)
@@ -245,6 +246,8 @@ public class OperationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + userId));
 
+        validateOperationCanBeEdited(operation);
+
         // Verificar status da operação
         if (operation.getStatus() == OperationStatus.COMPLETED) {
             logger.error("Não é possível adicionar imagens a uma operação fechada: {}", operation.getId());
@@ -302,6 +305,8 @@ public class OperationService {
         // Buscar a operação
         Operation operation = findOperationById(operationId);
 
+        validateOperationCanBeEdited(operation);
+
         // Verificar status da operação
         if (operation.getStatus() == OperationStatus.COMPLETED) {
             logger.error("Não é possível remover imagens de uma operação fechada: {}", operationId);
@@ -358,6 +363,57 @@ public class OperationService {
         return operationRepository.save(operation);
     }
 
+    @Transactional
+    public Operation reopenOperation(Long operationId, Long userId, boolean reopenContainers) {
+        logger.info("Reabrindo operação com ID: {} por usuário ID: {}. Reabrir containers: {}",
+                operationId, userId, reopenContainers);
+
+        // Buscar a operação
+        Operation operation = operationRepository.findById(operationId)
+                .orElseThrow(() -> {
+                    logger.error("Operação não encontrada: {}", operationId);
+                    return new OperationNotFoundException("Operação não encontrada com ID: " + operationId);
+                });
+
+        // Validar se a operação está COMPLETED
+        if (operation.getStatus() != OperationStatus.COMPLETED) {
+            logger.error("Operação {} não está finalizada. Status atual: {}", operationId, operation.getStatus());
+            throw new IllegalStateException(
+                    String.format("Operação %d não está finalizada. Status atual: %s", operationId, operation.getStatus())
+            );
+        }
+
+        // Verificar permissões do usuário (opcional)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + userId));
+
+        // Alterar status para OPEN
+        OperationStatus previousStatus = operation.getStatus();
+        operation.setStatus(OperationStatus.OPEN);
+
+        // Se solicitado, reabrir todos os containers da operação
+        if (reopenContainers && operation.getContainers() != null) {
+            int containersReopened = 0;
+            for (Container container : operation.getContainers()) {
+                if (container.getStatus() == ContainerStatus.COMPLETED) {
+                    container.setStatus(ContainerStatus.PENDING);
+                    containerRepository.save(container);
+                    containersReopened++;
+                    logger.debug("Container {} reaberto automaticamente (status → PENDING)", container.getContainerId());
+                }
+            }
+            logger.info("{} containers reabertos automaticamente para a operação {}", containersReopened, operationId);
+        }
+
+        // Salvar (JPA Auditing irá registrar updatedAt e updatedByCpf automaticamente)
+        Operation savedOperation = operationRepository.save(operation);
+
+        logger.info("Operação {} reaberta com sucesso. Status: {} → {}. Reaberta por userId: {}",
+                operationId, previousStatus, OperationStatus.OPEN, userId);
+
+        return savedOperation;
+    }
+
     private void validateOperationStatusTransition(OperationStatus currentStatus, OperationStatus newStatus) {
         logger.debug("Validando transição de status de {} para {}", currentStatus, newStatus);
 
@@ -375,6 +431,26 @@ public class OperationService {
         }
 
         logger.debug("Transição de status válida");
+    }
+
+    private void validateOperationCanBeEdited(Operation operation) {
+        logger.debug("Validando se operação {} pode ser editada", operation.getId());
+
+        if (operation.getStatus() == OperationStatus.COMPLETED) {
+            logger.error("Tentativa de editar operação finalizada: {}", operation.getId());
+            throw new EntityAlreadyCompletedException(
+                    String.format("Operação %d está finalizada e não pode ser editada", operation.getId())
+            );
+        }
+
+        logger.debug("Operação {} pode ser editada", operation.getId());
+    }
+
+    private void validateOperationCanBeEdited(Long operationId) {
+        Operation operation = operationRepository.findById(operationId)
+                .orElseThrow(() -> new OperationNotFoundException("Operação não encontrada com ID: " + operationId));
+
+        validateOperationCanBeEdited(operation);
     }
 
     public Optional<Operation> findOperationByContainer(Container container) {return operationRepository.findByContainers(container);}

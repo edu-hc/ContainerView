@@ -1,8 +1,10 @@
 package com.ftc.containerView.service;
 
 import com.ftc.containerView.infra.aws.S3Service;
+import com.ftc.containerView.infra.errorhandling.exceptions.ImageNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
 import com.ftc.containerView.model.container.Container;
+import com.ftc.containerView.model.container.ContainerStatus;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
 import com.ftc.containerView.model.operation.Operation;
@@ -11,6 +13,7 @@ import com.ftc.containerView.repositories.ContainerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +27,13 @@ public class ContainerImageService {
     private final S3Service s3Service;
     private static final Logger logger = LoggerFactory.getLogger(ContainerImageService.class);
     private final ContainerRepository containerRepository;
+    private final ContainerService containerService;
 
-    public ContainerImageService(ContainerImageRepository containerImageRepository, S3Service s3Service, ContainerRepository containerRepository) {
+    public ContainerImageService(ContainerImageRepository containerImageRepository, S3Service s3Service, ContainerRepository containerRepository, ContainerService containerService) {
         this.containerImageRepository = containerImageRepository;
         this.s3Service = s3Service;
         this.containerRepository = containerRepository;
+        this.containerService = containerService;
     }
 
     public List<String> findContainerImagesByCategory(ContainerImageCategory category, String containerId) {
@@ -63,5 +68,53 @@ public class ContainerImageService {
 
         return imageLinks;
 
+    }
+
+    @Transactional
+    public void deleteContainerImage(String containerId, Long imageId, Long userId) {
+        logger.info("Removendo imagem {} do container {} por usuário {}",
+                imageId, containerId, userId);
+
+        // Buscar o container
+        Container container = containerRepository.findByContainerId(containerId)
+                .orElseThrow(() -> {
+                    logger.error("Container não encontrado: {}", containerId);
+                    return new IllegalArgumentException("Container não encontrado com ID: " + containerId);
+                });
+
+        containerService.validateContainerCanBeEdited(container);
+
+        // Verificar status do container (opcional - dependendo da regra de negócio)
+        if (container.getStatus() == ContainerStatus.COMPLETED) {
+            logger.error("Não é possível remover imagens de um container fechado: {}", containerId);
+            throw new IllegalStateException("Não é possível remover imagens de um container fechado");
+        }
+
+        // Buscar a imagem
+        ContainerImage imageToDelete = containerImageRepository.findById(imageId)
+                .orElseThrow(() -> {
+                    logger.error("Imagem não encontrada: {}", imageId);
+                    return new ImageNotFoundException("Imagem não encontrada com ID: " + imageId);
+                });
+
+        // Verificar se a imagem pertence ao container
+        if (!imageToDelete.getContainer().getContainerId().equals(containerId)) {
+            logger.error("Imagem {} não pertence ao container {}", imageId, containerId);
+            throw new IllegalArgumentException("Imagem não pertence ao container especificado");
+        }
+
+        // Deletar do S3
+        try {
+            s3Service.deleteFile(imageToDelete.getImageKey());
+            logger.debug("Imagem deletada do S3: {}", imageToDelete.getImageKey());
+        } catch (Exception e) {
+            logger.error("Erro ao deletar imagem do S3, continuando com remoção do banco: {}", e.getMessage());
+            // Continua mesmo se falhar no S3 (segue o padrão do OperationService)
+        }
+
+        // Deletar do banco
+        containerImageRepository.delete(imageToDelete);
+
+        logger.info("Imagem {} removida com sucesso do container {}", imageId, containerId);
     }
 }

@@ -70,6 +70,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(EntityAlreadyCompletedException.class)
+    public ResponseEntity<RestErrorMessage> handleEntityAlreadyCompleted(EntityAlreadyCompletedException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Tentativa de edição de entidade finalizada - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
+
+        metricsCollector.recordError("ENTITY_COMPLETED", "409", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "entity_already_completed");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.CONFLICT)
+                .code("ENTITY_ALREADY_COMPLETED")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(OperationNotFoundException.class)
     public ResponseEntity<RestErrorMessage> handleOperationNotFound(OperationNotFoundException ex, HttpServletRequest request) {
         Timer.Sample sample = metricsCollector.startTimer();

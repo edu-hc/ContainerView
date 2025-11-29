@@ -320,4 +320,37 @@ public class OperationController {
 
         return ResponseEntity.ok(updatedOperation);
     }
+
+    @PatchMapping("/{operationId}/reopen")
+    public ResponseEntity<Operation> reopenOperation(
+            @PathVariable Long operationId,
+            @RequestParam(defaultValue = "false") boolean reopenContainers,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("PATCH /operations/{}/reopen - Reabrindo operação. UserId: {}, IP: {}, ReopenContainers: {}",
+                operationId, userId, request.getRemoteAddr(), reopenContainers);
+
+        try {
+            Operation reopenedOperation = operationService.reopenOperation(operationId, userId, reopenContainers);
+
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("Operação {} reaberta com sucesso. Novo status: {}. Tempo de resposta: {}ms",
+                    operationId, reopenedOperation.getStatus(), execTime);
+
+            return ResponseEntity.ok(reopenedOperation);
+
+        } catch (OperationNotFoundException e) {
+            logger.error("Operação não encontrada: {}", operationId);
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            logger.error("Erro ao reabrir operação: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao reabrir operação {}: {}", operationId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

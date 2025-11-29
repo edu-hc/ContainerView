@@ -193,6 +193,7 @@ public class ContainerController {
         logger.info("POST /containers/{}/images - Adicionando imagens ao container. UserId: {}, IP: {}",
                 containerId, userId, request.getRemoteAddr());
 
+
         try {
             // Buscar o container existente
             Container container = containerService.getContainersByContainerId(containerId);
@@ -355,6 +356,38 @@ public class ContainerController {
         return ResponseEntity.ok(updatedContainer);
     }
 
+    @PatchMapping("/{containerId}/reopen")
+    public ResponseEntity<Container> reopenContainer(
+            @PathVariable String containerId,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("PATCH /containers/{}/reopen - Reabrindo container. UserId: {}, IP: {}",
+                containerId, userId, request.getRemoteAddr());
+
+        try {
+            Container reopenedContainer = containerService.reopenContainer(containerId, userId);
+
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("Container {} reaberto com sucesso. Novo status: {}. Tempo de resposta: {}ms",
+                    containerId, reopenedContainer.getStatus(), execTime);
+
+            return ResponseEntity.ok(reopenedContainer);
+
+        } catch (ContainerNotFoundException e) {
+            logger.error("Container não encontrado: {}", containerId);
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            logger.error("Erro ao reabrir container: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao reabrir container {}: {}", containerId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Container> getContainerByContainerId(@PathVariable String id, HttpServletRequest request) {
@@ -483,6 +516,39 @@ public class ContainerController {
                 id, containerImages.size(), executionTime);
 
         return ResponseEntity.ok(containerImages);
+    }
+
+    @DeleteMapping("/{containerId}/images/{imageId}")
+    public ResponseEntity<Void> deleteContainerImage(
+            @PathVariable String containerId,
+            @PathVariable Long imageId,
+            HttpServletRequest request) {
+
+        long startTime = System.currentTimeMillis();
+        Long userId = userContextService.getCurrentUserId();
+
+        logger.info("DELETE /containers/{}/images/{} - Removendo imagem de container. UserId: {}, IP: {}",
+                containerId, imageId, userId, request.getRemoteAddr());
+
+        try {
+            containerImageService.deleteContainerImage(containerId, imageId, userId);
+
+            long execTime = System.currentTimeMillis() - startTime;
+            logger.info("Imagem {} removida do container {} com sucesso. Tempo de resposta: {}ms",
+                    imageId, containerId, execTime);
+
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Container ou imagem não encontrados: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            logger.error("Operação não permitida: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (Exception e) {
+            logger.error("Erro ao deletar imagem de container: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{containerId}")
