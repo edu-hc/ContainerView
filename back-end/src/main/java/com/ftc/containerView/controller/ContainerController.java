@@ -7,6 +7,7 @@ import com.ftc.containerView.model.container.*;
 import com.ftc.containerView.model.images.AddImagesToContainerResultDTO;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
+import com.ftc.containerView.model.images.ContainerImageResponseDTO;
 import com.ftc.containerView.repositories.ContainerRepository;
 import com.ftc.containerView.repositories.OperationRepository;
 import com.ftc.containerView.repositories.UserRepository;
@@ -400,12 +401,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/VAZIO_FORRADO")
-    public ResponseEntity<List<String>> getContainerImagesVazioForrado(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesVazioForrado(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/VAZIO_FORRADO - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.VAZIO_FORRADO, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.VAZIO_FORRADO, id, expirationMinutes);
 
         logger.info("{} imagens de categoria VAZIO_FORRADO encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -417,12 +419,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/FIADA")
-    public ResponseEntity<List<String>> getContainerImagesFiada(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesFiada(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/FIADA - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.FIADA, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.FIADA, id, expirationMinutes);
 
         logger.info("{} imagens de categoria FIADA encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -434,12 +437,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/CHEIO_ABERTO")
-    public ResponseEntity<List<String>> getContainerImagesCheioAberto(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesCheioAberto(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/CHEIO_ABERTO - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.CHEIO_ABERTO, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.CHEIO_ABERTO, id, expirationMinutes);
 
         logger.info("{} imagens de categoria CHEIO_ABERTO encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -451,12 +455,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/MEIA_PORTA")
-    public ResponseEntity<List<String>> getContainerImagesMeiaPorta(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesMeiaPorta(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/MEIA_PORTA - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.MEIA_PORTA, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.MEIA_PORTA, id, expirationMinutes);
 
         logger.info("{} imagens de categoria MEIA_PORTA encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -468,12 +473,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/LACRADO_FECHADO")
-    public ResponseEntity<List<String>> getContainerImagesLacradoFechado(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesLacradoFechado(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/LACRADO_FECHADO - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.LACRADO_FECHADO, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.LACRADO_FECHADO, id, expirationMinutes);
 
         logger.info("{} imagens de categoria LACRADO_FECHADO encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -485,12 +491,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/LACRES_PRINCIPAIS")
-    public ResponseEntity<List<String>> getContainerImagesLacresPrincipais(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesLacresPrincipais(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/LACRES_PRINCIPAIS - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.LACRES_PRINCIPAIS, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.LACRES_PRINCIPAIS, id, expirationMinutes);
 
         logger.info("{} imagens de categoria LACRES_PRINCIPAIS encontradas para o container de ID {}", containerImages.size(), id);
 
@@ -502,12 +509,13 @@ public class ContainerController {
     }
 
     @GetMapping("/{id}/images/LACRES_OUTROS")
-    public ResponseEntity<List<String>> getContainerImagesLacresOutros(@PathVariable String id, HttpServletRequest request) {
+    public ResponseEntity<List<ContainerImageResponseDTO>> getContainerImagesLacresOutros(@PathVariable String id, @RequestParam(defaultValue = "120") int expirationMinutes, HttpServletRequest request) {
         logger.info("GET /containers/{}/images/LACRES_OUTROS - Buscando imagens categorizadas do container. IP: {}", id, request.getRemoteAddr());
 
         long startTime = System.currentTimeMillis();
 
-        List<String> containerImages = containerImageService.findContainerImagesByCategory(ContainerImageCategory.LACRES_OUTROS, id);
+        List<ContainerImageResponseDTO> containerImages = containerImageService.findContainerImagesByCategory(
+                ContainerImageCategory.LACRES_OUTROS, id, expirationMinutes);
 
         logger.info("{} imagens de categoria LACRES_OUTROS encontradas para o container de ID {}", containerImages.size(), id);
 

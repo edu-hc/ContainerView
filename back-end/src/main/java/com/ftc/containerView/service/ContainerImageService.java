@@ -7,6 +7,7 @@ import com.ftc.containerView.model.container.Container;
 import com.ftc.containerView.model.container.ContainerStatus;
 import com.ftc.containerView.model.images.ContainerImage;
 import com.ftc.containerView.model.images.ContainerImageCategory;
+import com.ftc.containerView.model.images.ContainerImageResponseDTO;
 import com.ftc.containerView.model.operation.Operation;
 import com.ftc.containerView.repositories.ContainerImageRepository;
 import com.ftc.containerView.repositories.ContainerRepository;
@@ -36,7 +37,7 @@ public class ContainerImageService {
         this.containerService = containerService;
     }
 
-    public List<String> findContainerImagesByCategory(ContainerImageCategory category, String containerId) {
+    public List<ContainerImageResponseDTO> findContainerImagesByCategory(ContainerImageCategory category, String containerId, int expirationMinutes) {
         logger.debug("Buscando imagens [{}] do container de ID: {}", category, containerId);
 
         Container container = containerRepository.findByContainerId(containerId).orElse(null);
@@ -55,18 +56,21 @@ public class ContainerImageService {
 
         logger.debug("Lista com {} imagens de containeres foi fornecida", images.size());
 
-        List<String> categoryImagesKeys = images.stream().filter(x -> x.getCategory() == category).map(ContainerImage::getImageKey).toList();
-        logger.debug("{} imagens encontradas para a categoria {}", categoryImagesKeys.size(), category);
+        List<ContainerImage> categoryImages = images.stream()
+                .filter(x -> x.getCategory() == category)
+                .toList();
 
-        List<String> imageLinks = new ArrayList<>();
+        logger.debug("{} imagens encontradas para a categoria {}", categoryImages.size(), category);
 
-        for (String imageKey : categoryImagesKeys) {
-
-            imageLinks.add(s3Service.generatePresignedUrl(imageKey, 120));
-            logger.debug("Link da imagem {} gerado", imageKey);
-        }
-
-        return imageLinks;
+        return categoryImages.stream()
+                .map(image -> new ContainerImageResponseDTO(
+                        image.getId(),
+                        s3Service.generatePresignedUrl(image.getImageKey(), expirationMinutes),
+                        image.getImageKey(),
+                        image.getCategory(),
+                        expirationMinutes
+                ))
+                .toList();
 
     }
 
