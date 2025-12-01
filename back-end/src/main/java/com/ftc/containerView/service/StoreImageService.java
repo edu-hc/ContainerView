@@ -85,7 +85,9 @@ public class StoreImageService {
         }
 
         for (MultipartFile image : images) {
-            String fileName = "sackImage_" + imageCount++ + "_" + operationId + ".jpg";
+
+            String uniqueId = UUID.randomUUID().toString();
+            String fileName = "sackImage_" + uniqueId + "_" + operationId + ".jpg";
 
             imageValidationService.validateImage(image);
 
