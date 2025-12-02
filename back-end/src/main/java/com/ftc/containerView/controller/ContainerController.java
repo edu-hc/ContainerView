@@ -163,8 +163,6 @@ public class ContainerController {
         containerImages.addAll(storeImageService.storeImagesToContainer(lacresPrincipalImages, newContainer.getId(), ContainerImageCategory.LACRES_PRINCIPAIS));
         containerImages.addAll(storeImageService.storeImagesToContainer(lacresOutrosImages, newContainer.getId(), ContainerImageCategory.LACRES_OUTROS));
 
-        containerService.validateMandatoryCategories(containerImages);
-
         newContainer.getContainerImages().addAll(containerImages); // Adiciona as imagens ao containerContainerImages(containerImages);
         containerRepository.save(newContainer);
 
