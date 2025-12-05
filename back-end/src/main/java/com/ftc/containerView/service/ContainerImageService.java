@@ -43,15 +43,15 @@ public class ContainerImageService {
         Container container = containerRepository.findByContainerId(containerId).orElse(null);
 
         if (container == null) {
-            logger.debug("Operação de ID {} não foi encontrada", containerId);
-            throw new IllegalArgumentException("Operação não pode ser nula");
+            logger.debug("Container de ID {} não foi encontrada", containerId);
+            throw new IllegalArgumentException("Container não pode ser nulo");
         }
 
         List<ContainerImage> images = containerImageRepository.findByContainer(container);
 
         if (images == null || images.isEmpty()) {
             logger.debug("Nenhuma imagem de container foi encontrada");
-            throw new IllegalArgumentException("Lista de imagens de containeres não pode ser nula ou vazia");
+            return new ArrayList<>();
         }
 
         logger.debug("Lista com {} imagens de containeres foi fornecida", images.size());
@@ -61,6 +61,11 @@ public class ContainerImageService {
                 .toList();
 
         logger.debug("{} imagens encontradas para a categoria {}", categoryImages.size(), category);
+
+        if (categoryImages.isEmpty()) {
+            logger.debug("Nenhuma imagem encontrada para a categoria {} no container {}", category, containerId);
+            return new ArrayList<>();
+        }
 
         return categoryImages.stream()
                 .map(image -> new ContainerImageResponseDTO(
