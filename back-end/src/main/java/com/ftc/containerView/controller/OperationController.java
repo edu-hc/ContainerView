@@ -1,5 +1,6 @@
 package com.ftc.containerView.controller;
 
+import com.ftc.containerView.infra.errorhandling.exceptions.EntityAlreadyCompletedException;
 import com.ftc.containerView.infra.errorhandling.exceptions.ImageNotFoundException;
 import com.ftc.containerView.infra.errorhandling.exceptions.ImageStorageException;
 import com.ftc.containerView.infra.errorhandling.exceptions.OperationNotFoundException;
@@ -206,6 +207,9 @@ public class OperationController {
         } catch (ImageStorageException e) {
             logger.error("Erro ao armazenar imagens: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (EntityAlreadyCompletedException e) {
+            logger.error("Operação {} já está finalizada. Impossível adicionar imagens.", id);
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
             logger.error("Erro ao adicionar imagens de sacaria à operação {}: {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
