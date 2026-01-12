@@ -1,5 +1,6 @@
 package com.ftc.containerView.infra.security.auth;
 
+import com.ftc.containerView.infra.errorhandling.exceptions.UnauthorizedAccessException;
 import com.ftc.containerView.infra.errorhandling.exceptions.UserNotFoundException;
 import com.ftc.containerView.model.user.User;
 import com.ftc.containerView.repositories.UserRepository;
@@ -23,7 +24,8 @@ public class UserContextService {
     public User getCurrentUser() {
         String cpf = getCurrentUserCpf();
         if (cpf == null) {
-            return null;
+            log.warn("Tentativa de obter usuário atual sem autenticação válida");
+            throw new UnauthorizedAccessException("Usuário não autenticado");
         }
 
         try {
@@ -45,7 +47,8 @@ public class UserContextService {
                     !authentication.getName().equals("anonymousUser")) {
                 return authentication.getName();
             }
-            return null;
+            log.warn("Tentativa de obter CPF sem autenticação válida");
+            throw new UnauthorizedAccessException("Usuário não autenticado");
         } catch (Exception e) {
             log.warn("Erro ao recuperar CPF do contexto de segurança: {}", e.getMessage());
             return null;
@@ -54,7 +57,11 @@ public class UserContextService {
 
     public Long getCurrentUserId() {
         User user = getCurrentUser();
-        return user != null ? user.getId() : null;
+        if (user == null) {
+            log.warn("Tentativa de obter userId sem autenticação válida");
+            throw new UnauthorizedAccessException("Usuário não autenticado");
+        }
+        return user.getId();
     }
 
     public boolean isUserAuthenticated() {

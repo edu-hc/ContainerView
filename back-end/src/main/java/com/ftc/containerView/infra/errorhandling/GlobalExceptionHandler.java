@@ -574,6 +574,52 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(UnauthorizedAccessException.class)
+    public ResponseEntity<RestErrorMessage> handleUnauthorizedAccess(
+            UnauthorizedAccessException ex,
+            HttpServletRequest request) {
+
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+        String clientIP = getClientIP(request);
+
+        log.warn("Acesso não autorizado - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId,
+                request.getRequestURI(),
+                clientIP,
+                ex.getMessage());
+
+        // MÉTRICAS - importante para detectar tentativas de acesso indevido
+        metricsCollector.recordError("UNAUTHORIZED_ACCESS", "401", request.getRequestURI());
+        metricsCollector.recordSecurityEvent("unauthorized_access", clientIP, request.getRequestURI());
+        metricsCollector.recordDuration(sample, "unauthorized_access");
+
+        // ALERTAS - monitorar por threshold para detectar possíveis ataques
+        alertService.processError(
+                "UNAUTHORIZED_ACCESS",
+                errorId,
+                request.getRequestURI(),
+                ex.getMessage(),
+                clientIP  // Usar IP pois não há usuário autenticado
+        );
+
+        // Construir resposta - NUNCA expor detalhes internos em produção
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .code("UNAUTHORIZED_ACCESS")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        // Adicionar header WWW-Authenticate conforme RFC 7235
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .header("WWW-Authenticate", "Bearer realm=\"ContainerView API\"")
+                .body(error);
+    }
+
     // ================================================================================================
     // HANDLER GENÉRICO - ÚLTIMO RECURSO (CRÍTICO) - MÉTRICAS + ALERTA IMEDIATO
     // ================================================================================================
