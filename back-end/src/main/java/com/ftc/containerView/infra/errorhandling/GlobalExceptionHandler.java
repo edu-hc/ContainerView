@@ -5,8 +5,10 @@ import com.ftc.containerView.infra.monitoring.ErrorAlertService;
 import com.ftc.containerView.infra.monitoring.ErrorMetricsCollector;
 import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Exception Handler com Sistema de Monitoramento Integrado.
@@ -462,6 +465,113 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<RestErrorMessage> handleConstraintViolation(
+            ConstraintViolationException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        String violations = ex.getConstraintViolations().stream()
+                .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+                .collect(Collectors.joining("; "));
+
+        log.warn("Violação de constraint - ID: {} - Path: {} - Violações: {}",
+                errorId, request.getRequestURI(), violations);
+
+        metricsCollector.recordError("CONSTRAINT_VIOLATION", "400", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "constraint_violation");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .code("CONSTRAINT_VIOLATION")
+                .message("Parâmetros inválidos: " + violations)
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<RestErrorMessage> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+        String currentUser = getCurrentUsername();
+
+        // Extrair mensagem mais específica se possível
+        String message = "Erro de integridade de dados";
+        if (ex.getCause() instanceof ConstraintViolationException) {
+            message = "Violação de constraint: registro duplicado ou referência inválida";
+        }
+
+        log.error("Violação de integridade de dados - ID: {} - Path: {} - User: {} - Erro: {}",
+                errorId, request.getRequestURI(), currentUser, ex.getMessage(), ex);
+
+        metricsCollector.recordError("DATA_INTEGRITY_VIOLATION", "409", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "data_integrity_violation");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.CONFLICT)
+                .code("DATA_INTEGRITY_VIOLATION")
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<RestErrorMessage> handleIllegalState(
+            IllegalStateException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Estado inválido - ID: {} - Path: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), ex.getMessage());
+
+        metricsCollector.recordError("INVALID_STATE", "409", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "invalid_state");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.CONFLICT)
+                .code("INVALID_STATE")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<RestErrorMessage> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+        Timer.Sample sample = metricsCollector.startTimer();
+        String errorId = generateErrorId();
+
+        log.warn("Argumento inválido - ID: {} - Path: {} - IP: {} - Detalhes: {}",
+                errorId, request.getRequestURI(), getClientIP(request), ex.getMessage());
+
+        metricsCollector.recordError("INVALID_ARGUMENT", "400", request.getRequestURI());
+        metricsCollector.recordDuration(sample, "invalid_argument");
+
+        RestErrorMessage error = RestErrorMessage.builder()
+                .status(HttpStatus.BAD_REQUEST)
+                .code("INVALID_ARGUMENT")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .errorId(errorId)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     // ================================================================================================
