@@ -47,7 +47,7 @@ public class User {
     private String totpSecret;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user")
     private List<Operation> operations = new ArrayList<>();
 
     public User(String firstName, String lastName, String cpf, String email, String password, UserRole role) {
